@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Staff Executive Dashboard -->
+<div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">Surtax Executive Dashboard</h1>
+    <p class="text-gray-500 mt-1">Comprehensive analytics for district staff</p>
+</div>
+
+<!-- Key Metrics Row -->
+<div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
+    <div class="bg-white rounded-xl shadow-sm p-4 text-center">
+        <p class="text-3xl font-bold text-gray-900">{{ stats.total_projects }}</p>
+        <p class="text-xs text-gray-500">Total Projects</p>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm p-4 text-center">
+        <p class="text-3xl font-bold text-green-600">{{ stats.active_projects }}</p>
+        <p class="text-xs text-gray-500">Active</p>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm p-4 text-center">
+        <p class="text-3xl font-bold text-blue-600">{{ stats.completed_projects }}</p>
+        <p class="text-xs text-gray-500">Completed</p>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm p-4 text-center">
+        <p class="text-3xl font-bold text-red-600">{{ stats.delayed_count }}</p>
+        <p class="text-xs text-gray-500">Delayed</p>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm p-4 text-center">
+        <p class="text-3xl font-bold text-orange-600">{{ stats.over_budget_count }}</p>
+        <p class="text-xs text-gray-500">Over Budget</p>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm p-4 text-center">
+        <p class="text-3xl font-bold text-blue-600">{{ stats.avg_completion|round if stats.avg_completion else 0 }}%</p>
+        <p class="text-xs text-gray-500">Avg Completion</p>
+    </div>
+</div>
+
+<!-- Financial Overview -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <div class="bg-white rounded-xl shadow-sm p-6">
+        <h2 class="text-lg font-bold text-gray-900 mb-4">Financial Summary</h2>
+        <div class="space-y-4">
+            <div>
+                <div class="flex justify-between text-sm mb-1">
+                    <span class="text-gray-600">Total Budget</span>
+                    <span class="font-bold text-gray-900">{{ stats.total_budget|currency }}</span>
+                </div>
+            </div>
+            <div>
+                <div class="flex justify-between text-sm mb-1">
+                    <span class="text-gray-600">Total Spent</span>
+                    <span class="font-bold text-blue-600">{{ stats.total_spent|currency }}</span>
+                </div>
+                {% set budget_used = (stats.total_spent / stats.total_budget * 100) if stats.total_budget else 0 %}
+                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                    <div class="h-2.5 rounded-full bg-blue-500" style="width: {{ budget_used|round }}%;"></div>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">{{ budget_used|round(1) }}% of budget utilized</p>
+            </div>
+            <div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">Remaining Balance</span>
+                    <span class="font-bold text-green-600">{{ stats.total_remaining|currency }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm p-6">
+        <h2 class="text-lg font-bold text-gray-900 mb-4">Spending by Category</h2>
+        <div class="space-y-3">
+            {% for cat in categories %}
+            <div>
+                <div class="flex justify-between text-sm mb-1">
+                    <span class="text-gray-700">{{ cat.category }}</span>
+                    <span class="font-medium text-gray-900">{{ cat.total_budget|currency }} <span class="text-gray-400">({{ cat.project_count }} projects)</span></span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="h-2 rounded-full bg-blue-500" style="width: {{ cat.percent_of_total }}%;"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Concerns Summary -->
+{% if concerns %}
+<div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+    <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-bold text-gray-900">Active Concerns</h2>
+        <a href="{{ url_for('surtax.concerns') }}" class="text-sm text-blue-600 hover:text-blue-700 font-medium">View all &rarr;</a>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="border-b border-gray-200">
+                    <th class="text-left py-2 text-xs text-gray-500 font-medium">Project</th>
+                    <th class="text-left py-2 text-xs text-gray-500 font-medium">School</th>
+                    <th class="text-left py-2 text-xs text-gray-500 font-medium">Issue</th>
+                    <th class="text-right py-2 text-xs text-gray-500 font-medium">Budget</th>
+                    <th class="text-left py-2 text-xs text-gray-500 font-medium">Risk</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in concerns[:10] %}
+                <tr class="border-b border-gray-100 hover:bg-gray-50">
+                    <td class="py-2">
+                        <a href="{{ url_for('surtax.project_detail', contract_id=c.contract_id) }}" class="text-blue-600 hover:text-blue-700 font-medium">{{ c.title[:40] }}{% if c.title|length > 40 %}...{% endif %}</a>
+                    </td>
+                    <td class="py-2 text-gray-600">{{ c.school_name or '-' }}</td>
+                    <td class="py-2">
+                        {% if c.is_delayed %}<span class="px-2 py-0.5 text-xs bg-red-100 text-red-700 rounded-full">{{ c.delay_days }}d late</span>{% endif %}
+                        {% if c.is_over_budget %}<span class="px-2 py-0.5 text-xs bg-orange-100 text-orange-700 rounded-full">+{{ c.budget_variance_pct }}%</span>{% endif %}
+                    </td>
+                    <td class="py-2 text-right font-medium">{{ c.current_amount|currency }}</td>
+                    <td class="py-2">
+                        <span class="px-2 py-0.5 text-xs rounded-full
+                            {% if c.risk_level == 'Critical' %}bg-red-100 text-red-700
+                            {% elif c.risk_level == 'High' %}bg-orange-100 text-orange-700
+                            {% elif c.risk_level == 'Medium' %}bg-yellow-100 text-yellow-700
+                            {% else %}bg-green-100 text-green-700{% endif %}">
+                            {{ c.risk_level }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- Quick Links -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <a href="{{ url_for('surtax.projects') }}" class="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow text-center">
+        <svg class="w-8 h-8 text-blue-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+        </svg>
+        <p class="text-sm font-medium text-gray-900">All Projects</p>
+    </a>
+    <a href="{{ url_for('surtax.schools') }}" class="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow text-center">
+        <svg class="w-8 h-8 text-blue-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+        </svg>
+        <p class="text-sm font-medium text-gray-900">Schools</p>
+    </a>
+    <a href="{{ url_for('financials.home') }}" class="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow text-center">
+        <svg class="w-8 h-8 text-blue-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+        </svg>
+        <p class="text-sm font-medium text-gray-900">Financials</p>
+    </a>
+    <a href="{{ url_for('tools.ask') }}" class="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow text-center">
+        <svg class="w-8 h-8 text-blue-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+        </svg>
+        <p class="text-sm font-medium text-gray-900">Ask AI</p>
+    </a>
+</div>
+{% endblock %}

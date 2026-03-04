@@ -1,0 +1,41 @@
+# Surtax Oversight Pro - Default Configuration
+
+app:
+  name: "Surtax Oversight Pro"
+  version: "1.0.0"
+  debug: false
+  secret_key: "${SECRET_KEY}"
+
+server:
+  host: "127.0.0.1"
+  port: 5847
+
+database:
+  type: "sqlite"
+  path: "data/surtax_pro.db"
+
+features:
+  ai_chat: true
+  ai_insights: true
+  claude_ai: true
+  vendor_matching: true
+  county_comparison: true
+  public_portal: true
+  document_upload: false
+  email_alerts: false
+  surtax_view: true
+  contracts_view: true
+
+analytics:
+  enable_predictions: true
+  comparison_counties: []
+
+display:
+  theme: "default"
+  logo_path: null
+  primary_color: "#1e40af"
+
+compliance:
+  require_capital_classification: true
+  budget_variance_alert_threshold: 10
+  schedule_delay_alert_threshold: 30

@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Simplified Committee Member Dashboard -->
+
+<!-- Header -->
+<div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">Overview</h1>
+    <p class="text-gray-500 mt-1">Your at-a-glance dashboard for oversight committee duties</p>
+</div>
+
+<!-- Section 1: Items Requiring Attention -->
+<div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+    <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+        Items Requiring Attention
+    </h2>
+
+    {% if delayed_projects > 0 %}
+    <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-3">
+        <div class="flex items-start gap-3">
+            <div class="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                <span class="text-red-600 font-bold text-lg">{{ delayed_projects }}</span>
+            </div>
+            <div class="flex-1">
+                <h3 class="font-semibold text-gray-900 mb-1">Projects Behind Schedule</h3>
+                <p class="text-sm text-gray-600 mb-2">Multiple projects experiencing delays</p>
+                <a href="{{ url_for('surtax.concerns') }}" class="text-sm text-blue-600 hover:text-blue-700 font-medium">View details &rarr;</a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if overbudget_projects > 0 %}
+    <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
+        <div class="flex items-start gap-3">
+            <div class="flex-shrink-0 w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+                <span class="text-amber-600 font-bold text-lg">{{ overbudget_projects }}</span>
+            </div>
+            <div class="flex-1">
+                <h3 class="font-semibold text-gray-900 mb-1">Projects Over Budget</h3>
+                <p class="text-sm text-gray-600 mb-2">Budget variances detected</p>
+                <a href="{{ url_for('surtax.concerns') }}" class="text-sm text-blue-600 hover:text-blue-700 font-medium">View details &rarr;</a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if delayed_projects == 0 and overbudget_projects == 0 %}
+    <div class="text-center py-8">
+        <svg class="w-16 h-16 text-green-500 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <p class="text-gray-600 font-medium">All projects on track</p>
+        <p class="text-sm text-gray-500 mt-1">No concerns at this time</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Section 2: Revenue & Spending Snapshot -->
+<div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+    <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            Revenue & Spending Snapshot
+        </h2>
+        <a href="{{ url_for('financials.home') }}" class="text-sm text-blue-600 hover:text-blue-700 font-medium">View full financials &rarr;</a>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <div class="text-center p-4 bg-gray-50 rounded-lg">
+            <p class="text-2xl font-bold text-gray-900">{{ stats.total_budget|currency }}</p>
+            <p class="text-sm text-gray-600">Total Budget</p>
+        </div>
+        <div class="text-center p-4 bg-blue-50 rounded-lg">
+            <p class="text-2xl font-bold text-blue-600">{{ stats.total_spent|currency }}</p>
+            <p class="text-sm text-gray-600">Spent to Date</p>
+        </div>
+        <div class="text-center p-4 bg-green-50 rounded-lg">
+            <p class="text-2xl font-bold text-green-600">{{ (stats.total_spent / stats.total_budget * 100)|round(1) if stats.total_budget else 0 }}%</p>
+            <p class="text-sm text-gray-600">Budget Used</p>
+        </div>
+    </div>
+
+    <div class="space-y-3">
+        <p class="text-sm font-medium text-gray-700">Top Spending Categories:</p>
+        {% for cat in categories[:3] %}
+        <div>
+            <div class="flex justify-between text-sm mb-1">
+                <span class="text-gray-700">{{ cat.category }}</span>
+                <span class="font-medium">{{ cat.total_budget|currency }} ({{ cat.percent_of_total|round }}%)</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                <div class="h-2.5 rounded-full bg-blue-600" style="width: {{ cat.percent_of_total }}%"></div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Section 3: Project Portfolio Overview -->
+<div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+    <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+            </svg>
+            Project Portfolio
+        </h2>
+        <a href="{{ url_for('surtax.projects') }}" class="text-sm text-blue-600 hover:text-blue-700 font-medium">View all projects &rarr;</a>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="text-center p-4 border border-gray-200 rounded-lg">
+            <p class="text-3xl font-bold text-gray-900">{{ stats.total_projects }}</p>
+            <p class="text-sm text-gray-600">Total Projects</p>
+        </div>
+        <div class="text-center p-4 border border-gray-200 rounded-lg">
+            <p class="text-3xl font-bold text-green-600">{{ stats.active_projects }}</p>
+            <p class="text-sm text-gray-600">Active</p>
+        </div>
+        <div class="text-center p-4 border border-gray-200 rounded-lg">
+            <p class="text-3xl font-bold text-blue-600">{{ stats.avg_completion|round if stats.avg_completion else 0 }}%</p>
+            <p class="text-sm text-gray-600">Avg Completion</p>
+        </div>
+        <div class="text-center p-4 border border-gray-200 rounded-lg">
+            <p class="text-3xl font-bold text-green-600">{{ stats.completed_projects }}</p>
+            <p class="text-sm text-gray-600">Completed</p>
+        </div>
+    </div>
+</div>
+
+<!-- Section 4: Key Documents & Meeting Prep -->
+<div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+    <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        Key Documents & Meeting Prep
+    </h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <a href="{{ url_for('tools.meeting') }}" class="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-blue-300 transition-colors">
+            <svg class="w-8 h-8 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            <div>
+                <p class="font-medium text-gray-900">Prepare for Meeting</p>
+                <p class="text-xs text-gray-500">Agenda, talking points, key questions</p>
+            </div>
+        </a>
+        <a href="{{ url_for('documents.minutes') }}" class="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-blue-300 transition-colors">
+            <svg class="w-8 h-8 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            <div>
+                <p class="font-medium text-gray-900">Meeting Minutes</p>
+                <p class="text-xs text-gray-500">Past meeting records</p>
+            </div>
+        </a>
+        <a href="{{ url_for('documents.report') }}" class="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-blue-300 transition-colors">
+            <svg class="w-8 h-8 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            <div>
+                <p class="font-medium text-gray-900">Annual Report</p>
+                <p class="text-xs text-gray-500">Yearly oversight summary</p>
+            </div>
+        </a>
+        <a href="{{ url_for('documents.home') }}" class="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-blue-300 transition-colors">
+            <svg class="w-8 h-8 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+            </svg>
+            <div>
+                <p class="font-medium text-gray-900">All Documents</p>
+                <p class="text-xs text-gray-500">Full document library</p>
+            </div>
+        </a>
+    </div>
+
+    <div class="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+        <h3 class="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+            <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+            </svg>
+            Key Points to Consider:
+        </h3>
+        <ul class="space-y-1 text-sm text-gray-700">
+            <li class="flex items-start gap-2"><span class="text-amber-600 mt-0.5">&bull;</span><span>How does year-to-date revenue compare with projections?</span></li>
+            <li class="flex items-start gap-2"><span class="text-amber-600 mt-0.5">&bull;</span><span>Do current expenditures align with ballot language and capital outlay requirements?</span></li>
+            <li class="flex items-start gap-2"><span class="text-amber-600 mt-0.5">&bull;</span><span>What is the district's multi-year forecast and contingency plan?</span></li>
+            <li class="flex items-start gap-2"><span class="text-amber-600 mt-0.5">&bull;</span><span>How is the district communicating surtax spending to the public?</span></li>
+        </ul>
+    </div>
+</div>
+
+<!-- Section 5: Guided AI Assistant -->
+<div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl shadow-sm p-6 mb-6">
+    <h2 class="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+        </svg>
+        Ask AI Assistant
+    </h2>
+    <p class="text-sm text-gray-600 mb-4">Get instant answers to common oversight questions</p>
+    <div class="flex items-center gap-3">
+        <a href="{{ url_for('tools.ask') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            Open AI Assistant
+        </a>
+        <span class="text-sm text-gray-600">Get answers about revenue, projects, compliance & more</span>
+    </div>
+</div>
+
+<!-- Staff View Escape Hatch -->
+<div class="text-center pb-4">
+    <p class="text-sm text-gray-500 mb-2">Need access to advanced analytics and detailed reports?</p>
+    <a href="{{ url_for('switch_persona', persona_id='staff') }}" class="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 font-medium">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+        </svg>
+        Switch to Staff View
+    </a>
+</div>
+{% endblock %}

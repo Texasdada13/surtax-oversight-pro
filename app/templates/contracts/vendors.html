@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">Vendor Directory</h1>
+    <p class="text-gray-500 mt-1">{{ vendors|length }} registered vendors</p>
+</div>
+
+<!-- Search -->
+<div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+    <div class="max-w-xl">
+        <label class="block text-sm font-medium text-gray-700 mb-2">Search vendors</label>
+        <div class="relative">
+            <input type="text" id="vendorSearch" placeholder="Enter vendor name..."
+                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                   onkeyup="filterVendors()">
+            <svg class="w-5 h-5 text-gray-400 absolute right-3 top-1/2 transform -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+        </div>
+    </div>
+</div>
+
+<!-- Vendor Grid -->
+<div id="vendorGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    {% for vendor in vendors %}
+    <a href="{{ url_for('contracts.vendor_detail', vendor_id=vendor.vendor_id) }}"
+       class="vendor-card bg-white rounded-xl shadow-sm p-5 hover:shadow-md transition-shadow card-hover"
+       data-name="{{ vendor.name|lower }}">
+        <div class="flex items-start justify-between mb-3">
+            <div>
+                <h3 class="font-semibold text-gray-900">{{ vendor.name }}</h3>
+                <p class="text-sm text-gray-500">{{ vendor.headquarters_city or 'Unknown' }}, {{ vendor.headquarters_state or 'FL' }}</p>
+            </div>
+            <span class="px-2 py-1 text-xs font-medium rounded-full
+                {% if vendor.vendor_size == 'Large' %}bg-purple-100 text-purple-700
+                {% elif vendor.vendor_size == 'Medium' %}bg-blue-100 text-blue-700
+                {% else %}bg-green-100 text-green-700{% endif %}">
+                {{ vendor.vendor_size or 'Unknown' }}
+            </span>
+        </div>
+
+        <div class="flex items-center justify-between text-sm">
+            <span class="text-gray-600">Active Contracts</span>
+            <span class="font-medium text-gray-900">{{ vendor.active_contracts }}</span>
+        </div>
+        <div class="flex items-center justify-between text-sm mt-1">
+            <span class="text-gray-600">Total Value</span>
+            <span class="font-medium text-gray-900">{{ vendor.total_contract_value|currency }}</span>
+        </div>
+        <div class="flex items-center justify-between text-sm mt-1">
+            <span class="text-gray-600">Performance Score</span>
+            <span class="font-medium {% if vendor.performance_score and vendor.performance_score >= 80 %}text-green-600{% elif vendor.performance_score and vendor.performance_score >= 60 %}text-yellow-600{% else %}text-red-600{% endif %}">
+                {{ vendor.performance_score|round(1) if vendor.performance_score else '-' }}
+            </span>
+        </div>
+        {% if vendor.avg_project_health %}
+        <div class="flex items-center justify-between text-sm mt-1">
+            <span class="text-gray-600">Avg Project Health</span>
+            <span class="font-medium {% if vendor.avg_project_health >= 70 %}text-green-600{% elif vendor.avg_project_health >= 50 %}text-yellow-600{% else %}text-red-600{% endif %}">
+                {{ vendor.avg_project_health|round(1) }}
+            </span>
+        </div>
+        {% endif %}
+
+        {% if vendor.years_in_business %}
+        <div class="mt-3 pt-3 border-t border-gray-100">
+            <div class="flex flex-wrap gap-2">
+                <span class="text-xs text-gray-500">{{ vendor.years_in_business }} years in business</span>
+                {% if vendor.minority_owned %}
+                <span class="px-1.5 py-0.5 text-xs bg-yellow-100 text-yellow-700 rounded">MBE</span>
+                {% endif %}
+                {% if vendor.woman_owned %}
+                <span class="px-1.5 py-0.5 text-xs bg-pink-100 text-pink-700 rounded">WBE</span>
+                {% endif %}
+                {% if vendor.small_business %}
+                <span class="px-1.5 py-0.5 text-xs bg-green-100 text-green-700 rounded">SBE</span>
+                {% endif %}
+                {% if vendor.local_business %}
+                <span class="px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 rounded">Local</span>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </a>
+    {% endfor %}
+</div>
+
+<!-- No Results -->
+<div id="noResults" class="hidden bg-white rounded-xl shadow-sm p-12 text-center">
+    <svg class="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+    </svg>
+    <p class="text-gray-500">No vendors match your search</p>
+</div>
+
+{% block scripts %}
+<script>
+function filterVendors() {
+    const search = document.getElementById('vendorSearch').value.toLowerCase();
+    const cards = document.querySelectorAll('.vendor-card');
+    let visibleCount = 0;
+
+    cards.forEach(card => {
+        const name = card.dataset.name;
+        if (name.includes(search)) {
+            card.classList.remove('hidden');
+            visibleCount++;
+        } else {
+            card.classList.add('hidden');
+        }
+    });
+
+    document.getElementById('noResults').classList.toggle('hidden', visibleCount > 0);
+}
+</script>
+{% endblock %}
+{% endblock %}
