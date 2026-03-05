@@ -27,13 +27,24 @@ def overview():
         cat_budget = cat.get('total_budget', 0) or 0
         cat['percent_of_total'] = round(cat_budget / total_budget * 100, 1) if total_budget > 0 else 0
 
+    # Get specific delayed/overbudget project details for the overview cards
+    delayed_details = [c for c in concerns if c.get('is_delayed')]
+    overbudget_details = [c for c in concerns if c.get('is_over_budget')]
+
+    # Budget utilization percent
+    total_spent = stats.get('total_spent', 0) or 0
+    budget_pct = round(total_spent / total_budget * 100, 1) if total_budget > 0 else 0
+
     return render_template(template,
-                          title='Surtax Overview',
+                          title='Oversight Committee Portal',
                           stats=stats,
                           categories=categories,
                           concerns=concerns,
                           delayed_projects=stats.get('delayed_count', 0),
                           overbudget_projects=stats.get('over_budget_count', 0),
+                          delayed_details=delayed_details,
+                          overbudget_details=overbudget_details,
+                          budget_pct=budget_pct,
                           quick_stats={
                               'active_projects': stats.get('active_projects', 0),
                               'total_budget': f"${stats.get('total_budget', 0)/1_000_000:,.1f}M" if stats.get('total_budget') else '$0'
