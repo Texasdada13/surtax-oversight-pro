@@ -21,9 +21,9 @@
                 </div>
                 {% if v.avg_health %}
                 <span class="inline-flex items-center justify-center w-10 h-10 rounded-full text-sm font-bold
-                    {% if v.avg_health >= 70 %}bg-green-500/100/20 text-green-300
+                    {% if v.avg_health >= 70 %}bg-green-500/20 text-green-300
                     {% elif v.avg_health >= 50 %}bg-yellow-500/20 text-yellow-300
-                    {% else %}bg-red-500/100/20 text-red-300{% endif %}">
+                    {% else %}bg-red-500/20 text-red-300{% endif %}">
                     {{ v.avg_health|round|int }}
                 </span>
                 {% endif %}

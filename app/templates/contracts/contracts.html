@@ -84,16 +84,16 @@
 <div class="flex flex-wrap gap-2 mb-4">
     <span class="text-sm text-slate-400">Active filters:</span>
     {% if current_search %}
-    <span class="inline-flex items-center gap-1 px-3 py-1 bg-blue-500/100/20 text-blue-300 rounded-full text-sm">&ldquo;{{ current_search }}&rdquo;</span>
+    <span class="inline-flex items-center gap-1 px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-sm">&ldquo;{{ current_search }}&rdquo;</span>
     {% endif %}
     {% if current_type %}
-    <span class="inline-flex items-center gap-1 px-3 py-1 bg-blue-500/100/20 text-blue-300 rounded-full text-sm">{{ 'Surtax Capital' if current_type == 'surtax' else 'General' }}</span>
+    <span class="inline-flex items-center gap-1 px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-sm">{{ 'Surtax Capital' if current_type == 'surtax' else 'General' }}</span>
     {% endif %}
     {% if current_status %}
-    <span class="inline-flex items-center gap-1 px-3 py-1 bg-blue-500/100/20 text-blue-300 rounded-full text-sm">{{ current_status }}</span>
+    <span class="inline-flex items-center gap-1 px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-sm">{{ current_status }}</span>
     {% endif %}
     {% if current_risk %}
-    <span class="inline-flex items-center gap-1 px-3 py-1 bg-blue-500/100/20 text-blue-300 rounded-full text-sm">{{ current_risk }} Risk</span>
+    <span class="inline-flex items-center gap-1 px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-sm">{{ current_risk }} Risk</span>
     {% endif %}
 </div>
 {% endif %}
@@ -113,13 +113,13 @@
                 <div class="flex items-center gap-2 mb-1">
                     <h3 class="text-lg font-semibold text-white truncate">{{ contract.title }}</h3>
                     {% if contract.surtax_category %}
-                    <span class="px-2 py-0.5 text-xs font-semibold bg-blue-500/100/20 text-blue-300 rounded-full">Surtax</span>
+                    <span class="px-2 py-0.5 text-xs font-semibold bg-blue-500/20 text-blue-300 rounded-full">Surtax</span>
                     {% endif %}
                     {% if contract.is_delayed %}
-                    <span class="px-2 py-0.5 text-xs font-semibold bg-red-500/100/20 text-red-300 rounded-full">Delayed</span>
+                    <span class="px-2 py-0.5 text-xs font-semibold bg-red-500/20 text-red-300 rounded-full">Delayed</span>
                     {% endif %}
                     {% if contract.is_over_budget %}
-                    <span class="px-2 py-0.5 text-xs font-semibold bg-orange-500/100/20 text-orange-300 rounded-full">Over Budget</span>
+                    <span class="px-2 py-0.5 text-xs font-semibold bg-orange-500/20 text-orange-300 rounded-full">Over Budget</span>
                     {% endif %}
                 </div>
                 <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-400">

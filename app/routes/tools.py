@@ -99,7 +99,7 @@ def compliance():
 
     # Compliance issues
     cursor.execute('''
-        SELECT contract_id, title, vendor_name, current_amount,
+        SELECT contract_id, title, vendor_name, current_amount, surtax_category,
                requires_insurance, insurance_verified,
                requires_bond, bond_verified,
                is_sole_source, justification,
@@ -110,30 +110,79 @@ def compliance():
     ''')
     contracts = [dict(row) for row in cursor.fetchall()]
 
-    # Flag compliance issues
+    # Flag compliance issues and compute area scores
     issues = []
-    for c in contracts:
-        if c.get('requires_insurance') and not c.get('insurance_verified'):
-            issues.append({'contract': c['title'], 'contract_id': c['contract_id'],
-                          'issue': 'Insurance not verified', 'severity': 'High'})
-        if c.get('requires_bond') and not c.get('bond_verified'):
-            issues.append({'contract': c['title'], 'contract_id': c['contract_id'],
-                          'issue': 'Bond not verified', 'severity': 'High'})
-        if c.get('is_sole_source') and not c.get('justification'):
-            issues.append({'contract': c['title'], 'contract_id': c['contract_id'],
-                          'issue': 'Sole source without justification', 'severity': 'Medium'})
-        if c.get('award_date') and not c.get('board_approval_date') and (c.get('current_amount', 0) or 0) > 50000:
-            issues.append({'contract': c['title'], 'contract_id': c['contract_id'],
-                          'issue': 'Missing board approval (>$50K)', 'severity': 'Critical'})
+    ins_required = ins_verified = 0
+    bond_required = bond_verified = 0
+    board_required = board_approved = 0
+    sole_source = sole_justified = 0
 
-    compliant = len(contracts) - len(set(i['contract_id'] for i in issues))
+    for c in contracts:
+        if c.get('requires_insurance'):
+            ins_required += 1
+            if c.get('insurance_verified'):
+                ins_verified += 1
+            else:
+                issues.append({'contract': c['title'], 'contract_id': c['contract_id'],
+                              'surtax_category': c.get('surtax_category'),
+                              'issue': 'Insurance not verified', 'area': 'Insurance', 'severity': 'High'})
+        if c.get('requires_bond'):
+            bond_required += 1
+            if c.get('bond_verified'):
+                bond_verified += 1
+            else:
+                issues.append({'contract': c['title'], 'contract_id': c['contract_id'],
+                              'surtax_category': c.get('surtax_category'),
+                              'issue': 'Bond not verified', 'area': 'Bonding', 'severity': 'High'})
+        if (c.get('current_amount', 0) or 0) > 50000:
+            board_required += 1
+            if c.get('board_approval_date'):
+                board_approved += 1
+            elif c.get('award_date'):
+                issues.append({'contract': c['title'], 'contract_id': c['contract_id'],
+                              'surtax_category': c.get('surtax_category'),
+                              'issue': 'Missing board approval (>$50K)', 'area': 'Board Approval', 'severity': 'Critical'})
+        if c.get('is_sole_source'):
+            sole_source += 1
+            if c.get('justification'):
+                sole_justified += 1
+            else:
+                issues.append({'contract': c['title'], 'contract_id': c['contract_id'],
+                              'surtax_category': c.get('surtax_category'),
+                              'issue': 'Sole source without justification', 'area': 'Procurement', 'severity': 'Medium'})
+
+    non_compliant_ids = set(i['contract_id'] for i in issues)
+    compliant = len(contracts) - len(non_compliant_ids)
+    compliance_pct = round(compliant / len(contracts) * 100) if contracts else 100
+
+    areas = {
+        'insurance': {
+            'required': ins_required, 'verified': ins_verified,
+            'pct': round(ins_verified / ins_required * 100) if ins_required else 100
+        },
+        'bonding': {
+            'required': bond_required, 'verified': bond_verified,
+            'pct': round(bond_verified / bond_required * 100) if bond_required else 100
+        },
+        'board': {
+            'required': board_required, 'approved': board_approved,
+            'pct': round(board_approved / board_required * 100) if board_required else 100
+        },
+        'procurement': {
+            'sole_source': sole_source, 'justified': sole_justified,
+            'pct': round(sole_justified / sole_source * 100) if sole_source else 100
+        },
+    }
 
     return render_template('tools/compliance.html',
                            title='Compliance',
                            contracts=contracts,
                            issues=issues,
                            total=len(contracts),
-                           compliant=compliant)
+                           compliant=compliant,
+                           non_compliant=len(non_compliant_ids),
+                           compliance_pct=compliance_pct,
+                           areas=areas)
 
 
 @tools_bp.route('/map')

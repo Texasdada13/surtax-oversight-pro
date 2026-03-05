@@ -127,7 +127,7 @@
                             {{ c.title[:45] }}{% if c.title|length > 45 %}...{% endif %}
                         </a>
                         {% if c.surtax_category %}
-                        <span class="ml-1 px-1.5 py-0.5 text-xs bg-blue-500/100/20 text-blue-300 rounded">Surtax</span>
+                        <span class="ml-1 px-1.5 py-0.5 text-xs bg-blue-500/20 text-blue-300 rounded">Surtax</span>
                         {% endif %}
                     </td>
                     <td class="py-2 text-slate-400">{{ c.vendor_name or '-' }}</td>
@@ -136,10 +136,10 @@
                     <td class="py-2 text-right">{{ c.percent_complete|int }}%</td>
                     <td class="py-2">
                         <span class="px-2 py-0.5 text-xs rounded-full
-                            {% if c.risk_level == 'Critical' %}bg-red-500/100/20 text-red-300
-                            {% elif c.risk_level == 'High' %}bg-orange-500/100/20 text-orange-300
+                            {% if c.risk_level == 'Critical' %}bg-red-500/20 text-red-300
+                            {% elif c.risk_level == 'High' %}bg-orange-500/20 text-orange-300
                             {% elif c.risk_level == 'Medium' %}bg-yellow-500/20 text-yellow-300
-                            {% else %}bg-green-500/100/20 text-green-300{% endif %}">
+                            {% else %}bg-green-500/20 text-green-300{% endif %}">
                             {{ c.risk_level }}
                         </span>
                     </td>
@@ -165,10 +165,10 @@
                 </div>
                 <div class="flex items-center gap-2">
                     {% if c.is_delayed %}
-                    <span class="px-2 py-0.5 text-xs bg-red-500/100/20 text-red-300 rounded-full">{{ c.delay_days }}d late</span>
+                    <span class="px-2 py-0.5 text-xs bg-red-500/20 text-red-300 rounded-full">{{ c.delay_days }}d late</span>
                     {% endif %}
                     {% if c.is_over_budget %}
-                    <span class="px-2 py-0.5 text-xs bg-orange-500/100/20 text-orange-300 rounded-full">+{{ c.budget_variance_pct }}%</span>
+                    <span class="px-2 py-0.5 text-xs bg-orange-500/20 text-orange-300 rounded-full">+{{ c.budget_variance_pct }}%</span>
                     {% endif %}
                 </div>
             </div>

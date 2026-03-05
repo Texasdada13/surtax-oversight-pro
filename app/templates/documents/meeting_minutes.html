@@ -21,7 +21,7 @@
                     <p class="text-sm text-slate-400">{{ m.meeting_date|date if m.meeting_date else 'No date' }}{% if m.location %} &bull; {{ m.location }}{% endif %}</p>
                 </div>
                 <span class="px-2 py-0.5 text-xs rounded-full
-                    {% if m.status == 'Approved' %}bg-green-500/100/20 text-green-300
+                    {% if m.status == 'Approved' %}bg-green-500/20 text-green-300
                     {% elif m.status == 'Draft' %}bg-yellow-500/20 text-yellow-300
                     {% else %}bg-slate-800 text-slate-400{% endif %}">
                     {{ m.status or 'Draft' }}

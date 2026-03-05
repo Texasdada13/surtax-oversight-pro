@@ -22,7 +22,7 @@
             <div class="flex items-center gap-3 mb-2">
                 <h1 class="text-2xl font-bold text-white">{{ contract.title }}</h1>
                 {% if contract.surtax_category %}
-                <span class="px-2 py-1 text-xs font-semibold bg-blue-500/100/20 text-blue-300 rounded-full">Surtax</span>
+                <span class="px-2 py-1 text-xs font-semibold bg-blue-500/20 text-blue-300 rounded-full">Surtax</span>
                 {% endif %}
             </div>
             <div class="flex flex-wrap items-center gap-3 text-sm text-slate-400">
@@ -34,16 +34,16 @@
                 <span>&middot; {{ contract.school_name }}</span>
                 {% endif %}
                 <span class="px-2 py-0.5 text-xs rounded-full
-                    {% if contract.status == 'Active' %}bg-green-500/100/20 text-green-300
-                    {% elif contract.status == 'Completed' %}bg-blue-500/100/20 text-blue-300
+                    {% if contract.status == 'Active' %}bg-green-500/20 text-green-300
+                    {% elif contract.status == 'Completed' %}bg-blue-500/20 text-blue-300
                     {% else %}bg-slate-800 text-slate-300{% endif %}">
                     {{ contract.status }}
                 </span>
                 {% if contract.is_delayed %}
-                <span class="px-2 py-0.5 text-xs bg-red-500/100/20 text-red-300 rounded-full">Delayed {{ contract.delay_days }}d</span>
+                <span class="px-2 py-0.5 text-xs bg-red-500/20 text-red-300 rounded-full">Delayed {{ contract.delay_days }}d</span>
                 {% endif %}
                 {% if contract.is_over_budget %}
-                <span class="px-2 py-0.5 text-xs bg-orange-500/100/20 text-orange-300 rounded-full">+{{ contract.budget_variance_pct }}% Over Budget</span>
+                <span class="px-2 py-0.5 text-xs bg-orange-500/20 text-orange-300 rounded-full">+{{ contract.budget_variance_pct }}% Over Budget</span>
                 {% endif %}
             </div>
         </div>
@@ -61,10 +61,10 @@
             <!-- Risk Badge -->
             <div class="text-center">
                 <span class="inline-block px-3 py-2 text-sm font-bold rounded-lg
-                    {% if contract.risk_level == 'Critical' %}bg-red-500/100/20 text-red-300
-                    {% elif contract.risk_level == 'High' %}bg-orange-500/100/20 text-orange-300
+                    {% if contract.risk_level == 'Critical' %}bg-red-500/20 text-red-300
+                    {% elif contract.risk_level == 'High' %}bg-orange-500/20 text-orange-300
                     {% elif contract.risk_level == 'Medium' %}bg-yellow-500/20 text-yellow-300
-                    {% else %}bg-green-500/100/20 text-green-300{% endif %}">
+                    {% else %}bg-green-500/20 text-green-300{% endif %}">
                     {{ contract.risk_level }} Risk
                 </span>
             </div>
@@ -283,7 +283,7 @@
                             </td>
                             <td class="py-2">
                                 <span class="px-2 py-0.5 text-xs rounded-full
-                                    {% if co.status == 'Approved' %}bg-green-500/100/20 text-green-300
+                                    {% if co.status == 'Approved' %}bg-green-500/20 text-green-300
                                     {% elif co.status == 'Pending' %}bg-yellow-500/20 text-yellow-300
                                     {% else %}bg-slate-800 text-slate-300{% endif %}">
                                     {{ co.status }}
@@ -318,7 +318,7 @@
                             <td class="py-2 text-right font-medium">{{ p.amount|currency_full }}</td>
                             <td class="py-2">
                                 <span class="px-2 py-0.5 text-xs rounded-full
-                                    {% if p.status == 'Paid' %}bg-green-500/100/20 text-green-300
+                                    {% if p.status == 'Paid' %}bg-green-500/20 text-green-300
                                     {% elif p.status == 'Pending' %}bg-yellow-500/20 text-yellow-300
                                     {% else %}bg-slate-800 text-slate-300{% endif %}">
                                     {{ p.status }}
@@ -350,8 +350,8 @@
                         {% endif %}
                     </div>
                     <span class="px-2 py-1 text-xs font-medium rounded-full
-                        {% if phase.status == 'Completed' %}bg-green-500/100/20 text-green-300
-                        {% elif phase.status == 'In Progress' %}bg-blue-500/100/20 text-blue-300
+                        {% if phase.status == 'Completed' %}bg-green-500/20 text-green-300
+                        {% elif phase.status == 'In Progress' %}bg-blue-500/20 text-blue-300
                         {% else %}bg-slate-800 text-slate-300{% endif %}">
                         {{ phase.status }}
                     </span>
@@ -396,8 +396,8 @@
                             <td class="py-2 text-right font-medium">{{ m.percent_complete|int }}%</td>
                             <td class="py-2">
                                 <span class="px-2 py-0.5 text-xs rounded-full
-                                    {% if m.status == 'Completed' %}bg-green-500/100/20 text-green-300
-                                    {% elif m.status == 'In Progress' %}bg-blue-500/100/20 text-blue-300
+                                    {% if m.status == 'Completed' %}bg-green-500/20 text-green-300
+                                    {% elif m.status == 'In Progress' %}bg-blue-500/20 text-blue-300
                                     {% else %}bg-slate-800 text-slate-300{% endif %}">
                                     {{ m.status }}
                                 </span>
@@ -435,8 +435,8 @@
                             <td class="py-2 text-slate-400">{{ i.inspector_name or '-' }}</td>
                             <td class="py-2">
                                 <span class="px-2 py-0.5 text-xs rounded-full
-                                    {% if i.status == 'Pass' %}bg-green-500/100/20 text-green-300
-                                    {% elif i.status == 'Fail' %}bg-red-500/100/20 text-red-300
+                                    {% if i.status == 'Pass' %}bg-green-500/20 text-green-300
+                                    {% elif i.status == 'Fail' %}bg-red-500/20 text-red-300
                                     {% else %}bg-yellow-500/20 text-yellow-300{% endif %}">
                                     {{ i.status }}
                                 </span>

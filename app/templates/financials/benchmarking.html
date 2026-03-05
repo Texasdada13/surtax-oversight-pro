@@ -15,10 +15,10 @@
     <div class="dark-card p-6">
         <div class="flex items-center gap-6">
             <div class="w-24 h-24 rounded-full flex items-center justify-center text-3xl font-bold
-                {% if health.grade == 'A' %}bg-green-500/100/20 text-green-300
-                {% elif health.grade == 'B' %}bg-blue-500/100/20 text-blue-300
+                {% if health.grade == 'A' %}bg-green-500/20 text-green-300
+                {% elif health.grade == 'B' %}bg-blue-500/20 text-blue-300
                 {% elif health.grade == 'C' %}bg-yellow-500/20 text-yellow-300
-                {% else %}bg-red-500/100/20 text-red-300{% endif %}">
+                {% else %}bg-red-500/20 text-red-300{% endif %}">
                 {{ health.grade }}
             </div>
             <div>
@@ -40,10 +40,10 @@
         <div class="p-5 border-b flex items-center justify-between">
             <h3 class="font-semibold text-white">{{ cat.name }}</h3>
             <span class="px-3 py-1 rounded-full text-sm font-medium
-                {% if cat.score >= 90 %}bg-green-500/100/20 text-green-300
-                {% elif cat.score >= 75 %}bg-blue-500/100/20 text-blue-300
+                {% if cat.score >= 90 %}bg-green-500/20 text-green-300
+                {% elif cat.score >= 75 %}bg-blue-500/20 text-blue-300
                 {% elif cat.score >= 60 %}bg-yellow-500/20 text-yellow-300
-                {% else %}bg-red-500/100/20 text-red-300{% endif %}">
+                {% else %}bg-red-500/20 text-red-300{% endif %}">
                 {{ cat.score }}/100
             </span>
         </div>
@@ -67,10 +67,10 @@
                             style="width: {{ [kpi.score, 100]|min }}%"></div>
                     </div>
                     <span class="text-xs px-2 py-0.5 rounded-full
-                        {% if kpi.rating == 'Excellent' %}bg-green-500/100/20 text-green-300
-                        {% elif kpi.rating == 'Good' %}bg-blue-500/100/20 text-blue-300
+                        {% if kpi.rating == 'Excellent' %}bg-green-500/20 text-green-300
+                        {% elif kpi.rating == 'Good' %}bg-blue-500/20 text-blue-300
                         {% elif kpi.rating == 'Fair' %}bg-yellow-500/20 text-yellow-300
-                        {% else %}bg-red-500/100/20 text-red-300{% endif %}">
+                        {% else %}bg-red-500/20 text-red-300{% endif %}">
                         {{ kpi.rating }}
                     </span>
                 </div>

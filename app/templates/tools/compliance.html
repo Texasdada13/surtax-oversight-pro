@@ -1,72 +1,213 @@
 {% extends "base.html" %}
+
+{% block page_title %}Compliance Dashboard{% endblock %}
+{% block page_subtitle %}Insurance, bonding, approvals & procurement{% endblock %}
+
 {% block content %}
 <style>
     main { background: #0f172a !important; }
     main > div { padding: 1.5rem !important; }
     .dark-card { background: #1e293b; border: 1px solid #334155; border-radius: 0.75rem; }
+    .compliance-area {
+        background: #1e293b; border: 1px solid #334155; border-radius: 0.75rem;
+        padding: 1.5rem; position: relative; overflow: hidden;
+    }
+    .compliance-area .area-icon {
+        position: absolute; top: -0.5rem; right: -0.5rem;
+        width: 4rem; height: 4rem; border-radius: 50%; opacity: 0.1;
+    }
 </style>
-<div class="space-y-6">
-    <div>
-        <h1 class="text-2xl font-bold text-white">Compliance Dashboard</h1>
-        <p class="text-slate-400">Monitor insurance, bonding, board approvals, and procurement compliance</p>
-    </div>
 
-    <!-- Summary -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="dark-card p-5">
-            <p class="text-sm text-slate-400">Total Active Contracts</p>
-            <p class="text-3xl font-bold text-white">{{ total }}</p>
-        </div>
-        <div class="dark-card p-5">
-            <p class="text-sm text-slate-400">Fully Compliant</p>
-            <p class="text-3xl font-bold text-green-400">{{ compliant }}</p>
-            <p class="text-xs text-slate-500">{{ "%.0f"|format(compliant / (total or 1) * 100) }}% compliance rate</p>
-        </div>
-        <div class="dark-card p-5">
-            <p class="text-sm text-slate-400">Issues Found</p>
-            <p class="text-3xl font-bold text-red-400">{{ issues|length }}</p>
-        </div>
-    </div>
-
-    <!-- Issues -->
-    {% if issues %}
-    <div class="dark-card">
-        <div class="p-5 border-b"><h3 class="font-semibold text-white">Compliance Issues</h3></div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead class="bg-slate-800/50">
-                    <tr>
-                        <th class="px-4 py-3 text-left font-medium text-slate-400">Contract</th>
-                        <th class="px-4 py-3 text-left font-medium text-slate-400">Issue</th>
-                        <th class="px-4 py-3 text-center font-medium text-slate-400">Severity</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-800">
-                    {% for i in issues %}
-                    <tr class="hover:bg-slate-800/50">
-                        <td class="px-4 py-3">
-                            <a href="{{ url_for('contracts.contract_detail', contract_id=i.contract_id) }}" class="text-blue-400 hover:text-blue-300">{{ i.contract }}</a>
-                        </td>
-                        <td class="px-4 py-3 text-slate-400">{{ i.issue }}</td>
-                        <td class="px-4 py-3 text-center">
-                            <span class="px-2 py-0.5 text-xs rounded-full
-                                {% if i.severity == 'Critical' %}bg-red-500/100/20 text-red-300
-                                {% elif i.severity == 'High' %}bg-orange-500/100/20 text-orange-300
-                                {% else %}bg-yellow-500/20 text-yellow-300{% endif %}">
-                                {{ i.severity }}
-                            </span>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-    {% else %}
-    <div class="bg-green-500/10 border border-green-200 rounded-xl p-8 text-center">
-        <p class="text-green-300 font-medium text-lg">All Contracts Compliant</p>
-        <p class="text-green-400 text-sm mt-1">No compliance issues found across active contracts</p>
-    </div>
-    {% endif %}
+<!-- Header -->
+<div class="mb-6">
+    <h1 class="text-3xl font-bold text-white">Compliance Dashboard</h1>
+    <p class="text-slate-400 mt-1">Monitor insurance, bonding, board approvals, and procurement compliance</p>
 </div>
+
+<!-- Overall Compliance Score + Summary Row -->
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
+    <!-- Overall Donut -->
+    <div class="dark-card p-6 flex flex-col items-center justify-center">
+        <div class="relative w-28 h-28 mb-3">
+            <svg class="w-28 h-28 -rotate-90" viewBox="0 0 36 36">
+                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                      fill="none" stroke="#334155" stroke-width="3"></path>
+                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                      fill="none" stroke="{% if compliance_pct >= 90 %}#22c55e{% elif compliance_pct >= 70 %}#3b82f6{% elif compliance_pct >= 50 %}#f59e0b{% else %}#ef4444{% endif %}"
+                      stroke-width="3" stroke-dasharray="{{ compliance_pct }}, 100" stroke-linecap="round"></path>
+            </svg>
+            <div class="absolute inset-0 flex flex-col items-center justify-center">
+                <span class="text-2xl font-bold text-white">{{ compliance_pct }}%</span>
+                <span class="text-xs text-slate-500">Overall</span>
+            </div>
+        </div>
+        <p class="text-sm text-slate-400">{{ compliant }} of {{ total }} compliant</p>
+    </div>
+
+    <!-- Summary Stats -->
+    <div class="dark-card p-5">
+        <p class="text-xs text-slate-500 font-medium uppercase tracking-wider">Total Active</p>
+        <p class="text-3xl font-bold text-white mt-1">{{ total }}</p>
+        <p class="text-sm text-slate-400 mt-1">contracts monitored</p>
+    </div>
+    <div class="dark-card p-5">
+        <p class="text-xs text-slate-500 font-medium uppercase tracking-wider">Fully Compliant</p>
+        <p class="text-3xl font-bold text-green-400 mt-1">{{ compliant }}</p>
+        <p class="text-sm text-slate-400 mt-1">no issues detected</p>
+    </div>
+    <div class="dark-card p-5">
+        <p class="text-xs text-slate-500 font-medium uppercase tracking-wider">Issues Found</p>
+        <p class="text-3xl font-bold text-red-400 mt-1">{{ issues|length }}</p>
+        <p class="text-sm text-slate-400 mt-1">across {{ non_compliant }} contracts</p>
+    </div>
+</div>
+
+<!-- 4 Compliance Areas -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+    <!-- Insurance -->
+    <div class="compliance-area">
+        <div class="area-icon bg-blue-500"></div>
+        <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-white">Insurance</h3>
+            </div>
+            <span class="text-2xl font-bold {% if areas.insurance.pct >= 90 %}text-green-400{% elif areas.insurance.pct >= 70 %}text-blue-400{% else %}text-red-400{% endif %}">
+                {{ areas.insurance.pct }}%
+            </span>
+        </div>
+        <div class="w-full bg-slate-700 rounded-full h-2 mb-2">
+            <div class="h-2 rounded-full {% if areas.insurance.pct >= 90 %}bg-green-500{% elif areas.insurance.pct >= 70 %}bg-blue-500{% else %}bg-red-500{% endif %}"
+                 style="width: {{ areas.insurance.pct }}%;"></div>
+        </div>
+        <p class="text-xs text-slate-500">{{ areas.insurance.verified }} of {{ areas.insurance.required }} verified</p>
+    </div>
+
+    <!-- Bonding -->
+    <div class="compliance-area">
+        <div class="area-icon bg-purple-500"></div>
+        <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-white">Bonding</h3>
+            </div>
+            <span class="text-2xl font-bold {% if areas.bonding.pct >= 90 %}text-green-400{% elif areas.bonding.pct >= 70 %}text-blue-400{% else %}text-red-400{% endif %}">
+                {{ areas.bonding.pct }}%
+            </span>
+        </div>
+        <div class="w-full bg-slate-700 rounded-full h-2 mb-2">
+            <div class="h-2 rounded-full {% if areas.bonding.pct >= 90 %}bg-green-500{% elif areas.bonding.pct >= 70 %}bg-blue-500{% else %}bg-red-500{% endif %}"
+                 style="width: {{ areas.bonding.pct }}%;"></div>
+        </div>
+        <p class="text-xs text-slate-500">{{ areas.bonding.verified }} of {{ areas.bonding.required }} verified</p>
+    </div>
+
+    <!-- Board Approval -->
+    <div class="compliance-area">
+        <div class="area-icon bg-amber-500"></div>
+        <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-white">Board Approval</h3>
+            </div>
+            <span class="text-2xl font-bold {% if areas.board.pct >= 90 %}text-green-400{% elif areas.board.pct >= 70 %}text-blue-400{% else %}text-red-400{% endif %}">
+                {{ areas.board.pct }}%
+            </span>
+        </div>
+        <div class="w-full bg-slate-700 rounded-full h-2 mb-2">
+            <div class="h-2 rounded-full {% if areas.board.pct >= 90 %}bg-green-500{% elif areas.board.pct >= 70 %}bg-blue-500{% else %}bg-red-500{% endif %}"
+                 style="width: {{ areas.board.pct }}%;"></div>
+        </div>
+        <p class="text-xs text-slate-500">{{ areas.board.approved }} of {{ areas.board.required }} approved (contracts &gt;$50K)</p>
+    </div>
+
+    <!-- Procurement -->
+    <div class="compliance-area">
+        <div class="area-icon bg-emerald-500"></div>
+        <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-white">Procurement</h3>
+            </div>
+            <span class="text-2xl font-bold {% if areas.procurement.pct >= 90 %}text-green-400{% elif areas.procurement.pct >= 70 %}text-blue-400{% else %}text-red-400{% endif %}">
+                {{ areas.procurement.pct }}%
+            </span>
+        </div>
+        <div class="w-full bg-slate-700 rounded-full h-2 mb-2">
+            <div class="h-2 rounded-full {% if areas.procurement.pct >= 90 %}bg-green-500{% elif areas.procurement.pct >= 70 %}bg-blue-500{% else %}bg-red-500{% endif %}"
+                 style="width: {{ areas.procurement.pct }}%;"></div>
+        </div>
+        <p class="text-xs text-slate-500">{{ areas.procurement.justified }} of {{ areas.procurement.sole_source }} sole-source justified</p>
+    </div>
+</div>
+
+<!-- Issues Table -->
+{% if issues %}
+<div class="dark-card overflow-hidden">
+    <div class="p-5 border-b border-slate-700">
+        <h3 class="font-semibold text-white">Compliance Issues</h3>
+        <p class="text-xs text-slate-500 mt-1">{{ issues|length }} issues requiring attention</p>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="border-b border-slate-700 bg-slate-800/50">
+                    <th class="px-4 py-3 text-left font-medium text-slate-400">Contract</th>
+                    <th class="px-4 py-3 text-left font-medium text-slate-400">Issue</th>
+                    <th class="px-4 py-3 text-left font-medium text-slate-400">Area</th>
+                    <th class="px-4 py-3 text-center font-medium text-slate-400">Severity</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for i in issues %}
+                <tr class="border-b border-slate-800 hover:bg-slate-800/50">
+                    <td class="px-4 py-3">
+                        <a href="{% if i.surtax_category %}{{ url_for('surtax.project_detail', contract_id=i.contract_id) }}{% else %}{{ url_for('contracts.contract_detail', contract_id=i.contract_id) }}{% endif %}"
+                           class="text-blue-400 hover:text-blue-300 font-medium">{{ i.contract }}</a>
+                    </td>
+                    <td class="px-4 py-3 text-slate-400">{{ i.issue }}</td>
+                    <td class="px-4 py-3">
+                        <span class="text-xs text-slate-500">{{ i.area }}</span>
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                        <span class="px-2 py-0.5 text-xs rounded-full font-medium
+                            {% if i.severity == 'Critical' %}bg-red-500/20 text-red-300
+                            {% elif i.severity == 'High' %}bg-orange-500/20 text-orange-300
+                            {% else %}bg-yellow-500/20 text-yellow-300{% endif %}">
+                            {{ i.severity }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="dark-card p-12 text-center">
+    <div class="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+        <svg class="w-10 h-10 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+    </div>
+    <p class="text-white font-medium text-lg">All Contracts Compliant</p>
+    <p class="text-slate-400 text-sm mt-1">No compliance issues found across active contracts</p>
+</div>
+{% endif %}
 {% endblock %}

@@ -40,8 +40,8 @@
             </div>
             <span class="px-2 py-1 text-xs font-medium rounded-full
                 {% if vendor.vendor_size == 'Large' %}bg-purple-500/20 text-purple-300
-                {% elif vendor.vendor_size == 'Medium' %}bg-blue-500/100/20 text-blue-300
-                {% else %}bg-green-500/100/20 text-green-300{% endif %}">
+                {% elif vendor.vendor_size == 'Medium' %}bg-blue-500/20 text-blue-300
+                {% else %}bg-green-500/20 text-green-300{% endif %}">
                 {{ vendor.vendor_size or 'Unknown' }}
             </span>
         </div>
@@ -80,10 +80,10 @@
                 <span class="px-1.5 py-0.5 text-xs bg-pink-100 text-pink-700 rounded">WBE</span>
                 {% endif %}
                 {% if vendor.small_business %}
-                <span class="px-1.5 py-0.5 text-xs bg-green-500/100/20 text-green-300 rounded">SBE</span>
+                <span class="px-1.5 py-0.5 text-xs bg-green-500/20 text-green-300 rounded">SBE</span>
                 {% endif %}
                 {% if vendor.local_business %}
-                <span class="px-1.5 py-0.5 text-xs bg-blue-500/100/20 text-blue-300 rounded">Local</span>
+                <span class="px-1.5 py-0.5 text-xs bg-blue-500/20 text-blue-300 rounded">Local</span>
                 {% endif %}
             </div>
         </div>

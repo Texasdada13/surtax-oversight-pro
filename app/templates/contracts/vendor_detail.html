@@ -20,12 +20,12 @@
                 <span>{{ vendor.headquarters_city or 'Unknown' }}, {{ vendor.headquarters_state or 'FL' }}</span>
                 <span class="px-2 py-0.5 text-xs font-medium rounded-full
                     {% if vendor.vendor_size == 'Large' %}bg-purple-500/20 text-purple-300
-                    {% elif vendor.vendor_size == 'Medium' %}bg-blue-500/100/20 text-blue-300
-                    {% else %}bg-green-500/100/20 text-green-300{% endif %}">
+                    {% elif vendor.vendor_size == 'Medium' %}bg-blue-500/20 text-blue-300
+                    {% else %}bg-green-500/20 text-green-300{% endif %}">
                     {{ vendor.vendor_size or 'Unknown' }}
                 </span>
                 <span class="px-2 py-0.5 text-xs font-medium rounded-full
-                    {% if vendor.status == 'Active' %}bg-green-500/100/20 text-green-300{% else %}bg-slate-800 text-slate-300{% endif %}">
+                    {% if vendor.status == 'Active' %}bg-green-500/20 text-green-300{% else %}bg-slate-800 text-slate-300{% endif %}">
                     {{ vendor.status }}
                 </span>
             </div>
@@ -148,10 +148,10 @@
                 <span class="px-2 py-1 text-xs bg-pink-100 text-pink-700 rounded-full">Woman-Owned (WBE)</span>
                 {% endif %}
                 {% if vendor.small_business %}
-                <span class="px-2 py-1 text-xs bg-green-500/100/20 text-green-300 rounded-full">Small Business (SBE)</span>
+                <span class="px-2 py-1 text-xs bg-green-500/20 text-green-300 rounded-full">Small Business (SBE)</span>
                 {% endif %}
                 {% if vendor.local_business %}
-                <span class="px-2 py-1 text-xs bg-blue-500/100/20 text-blue-300 rounded-full">Local Business</span>
+                <span class="px-2 py-1 text-xs bg-blue-500/20 text-blue-300 rounded-full">Local Business</span>
                 {% endif %}
             </div>
         </div>
@@ -172,7 +172,7 @@
                     <div class="flex items-center gap-2 mb-1">
                         <h3 class="font-semibold text-white truncate">{{ c.title }}</h3>
                         {% if c.surtax_category %}
-                        <span class="px-1.5 py-0.5 text-xs bg-blue-500/100/20 text-blue-300 rounded">Surtax</span>
+                        <span class="px-1.5 py-0.5 text-xs bg-blue-500/20 text-blue-300 rounded">Surtax</span>
                         {% endif %}
                     </div>
                     <div class="flex items-center gap-3 text-sm text-slate-400">
@@ -198,10 +198,10 @@
                         </div>
                     </div>
                     <span class="px-2 py-0.5 text-xs rounded-full
-                        {% if c.risk_level == 'Critical' %}bg-red-500/100/20 text-red-300
-                        {% elif c.risk_level == 'High' %}bg-orange-500/100/20 text-orange-300
+                        {% if c.risk_level == 'Critical' %}bg-red-500/20 text-red-300
+                        {% elif c.risk_level == 'High' %}bg-orange-500/20 text-orange-300
                         {% elif c.risk_level == 'Medium' %}bg-yellow-500/20 text-yellow-300
-                        {% else %}bg-green-500/100/20 text-green-300{% endif %}">
+                        {% else %}bg-green-500/20 text-green-300{% endif %}">
                         {{ c.risk_level }}
                     </span>
                 </div>

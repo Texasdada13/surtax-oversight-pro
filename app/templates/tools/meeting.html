@@ -66,7 +66,7 @@
                         <p class="text-xs text-slate-400">{{ a.assignee or 'Unassigned' }} &bull; Due: {{ a.due_date|date if a.due_date else 'TBD' }}</p>
                     </div>
                     <span class="px-2 py-0.5 text-xs rounded-full
-                        {% if a.priority == 'High' %}bg-red-500/100/20 text-red-300
+                        {% if a.priority == 'High' %}bg-red-500/20 text-red-300
                         {% elif a.priority == 'Medium' %}bg-yellow-500/20 text-yellow-300
                         {% else %}bg-slate-800 text-slate-400{% endif %}">{{ a.priority }}</span>
                 </div>
