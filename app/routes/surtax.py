@@ -194,12 +194,33 @@ def project_detail(contract_id):
     cursor.execute('SELECT * FROM inspection_log WHERE contract_id = ? ORDER BY inspection_date DESC', (contract_id,))
     inspections = [dict(row) for row in cursor.fetchall()]
 
+    # Get community engagement
+    cursor.execute('SELECT * FROM community_engagement WHERE contract_id = ? ORDER BY meeting_date DESC', (contract_id,))
+    community = [dict(row) for row in cursor.fetchall()]
+
+    # Get committee actions
+    cursor.execute('SELECT * FROM committee_actions WHERE contract_id = ? ORDER BY due_date DESC', (contract_id,))
+    actions = [dict(row) for row in cursor.fetchall()]
+
+    # Get contractor performance
+    cursor.execute('SELECT * FROM contractor_performance WHERE contract_id = ?', (contract_id,))
+    perf_row = cursor.fetchone()
+    contractor_perf = dict(perf_row) if perf_row else None
+
+    # Get documents
+    cursor.execute('SELECT * FROM documents WHERE contract_id = ? AND is_deleted = 0 ORDER BY uploaded_date DESC', (contract_id,))
+    documents = [dict(row) for row in cursor.fetchall()]
+
     return render_template('surtax/project_detail_enhanced.html',
                           title=project['title'],
                           project=project,
                           phases=phases,
                           change_orders=change_orders,
-                          inspections=inspections)
+                          inspections=inspections,
+                          community=community,
+                          actions=actions,
+                          contractor_perf=contractor_perf,
+                          documents=documents)
 
 
 @surtax_bp.route('/schools')

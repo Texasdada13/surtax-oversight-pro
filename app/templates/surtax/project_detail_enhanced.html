@@ -1,187 +1,628 @@
 {% extends "base.html" %}
 
+{% block page_title %}{{ project.title[:60] }}{% endblock %}
+{% block page_subtitle %}Project Detail{% endblock %}
+
 {% block content %}
+<style>
+    main { background: #0f172a !important; }
+    main > div { padding: 1.5rem !important; }
+    .dark-card { background: #1e293b; border: 1px solid #334155; border-radius: 0.75rem; }
+    .tab-btn {
+        padding: 0.75rem 1.25rem; font-size: 0.875rem; font-weight: 500;
+        border-bottom: 2px solid transparent; white-space: nowrap;
+        color: #94a3b8; transition: all 0.15s ease; cursor: pointer; background: none; border-top: 0; border-left: 0; border-right: 0;
+    }
+    .tab-btn:hover { color: #e2e8f0; }
+    .tab-btn.active, [x-cloak] { border-bottom-color: #3b82f6; color: #3b82f6; }
+    .kpi-card { background: #1e293b; border: 1px solid #334155; border-radius: 0.75rem; padding: 1rem 1.25rem; }
+    .detail-label { font-size: 0.75rem; color: #64748b; margin-bottom: 0.25rem; }
+    .detail-value { font-size: 0.875rem; color: #e2e8f0; }
+    .badge { font-size: 0.7rem; padding: 0.125rem 0.5rem; border-radius: 9999px; font-weight: 600; }
+    .badge-risk-low { background: #065f46; color: #6ee7b7; }
+    .badge-risk-medium { background: #78350f; color: #fcd34d; }
+    .badge-risk-high { background: #7c2d12; color: #fdba74; }
+    .badge-risk-critical { background: #7f1d1d; color: #fca5a5; }
+    .badge-delayed { background: #dc2626; color: white; }
+    .badge-overbudget { background: #f97316; color: white; }
+    .badge-status-active { background: #065f46; color: #6ee7b7; }
+    .badge-status-completed { background: #1e3a5f; color: #93c5fd; }
+    .badge-status-planning { background: #78350f; color: #fcd34d; }
+    .phase-card { background: #0f172a; border: 1px solid #334155; border-radius: 0.5rem; padding: 1rem; }
+    .inspection-card { background: #0f172a; border: 1px solid #334155; border-radius: 0.5rem; padding: 1rem; }
+    .action-row { background: #0f172a; border: 1px solid #334155; border-radius: 0.5rem; padding: 0.75rem 1rem; }
+</style>
+
 <!-- Breadcrumb -->
-<nav class="flex items-center text-sm text-gray-500 mb-6">
-    <a href="{{ url_for('surtax.overview') }}" class="hover:text-gray-700">Home</a>
+<nav class="flex items-center text-sm text-slate-500 mb-4">
+    <a href="{{ url_for('surtax.overview') }}" class="hover:text-slate-300 transition-colors">Home</a>
     <svg class="w-4 h-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-    <a href="{{ url_for('surtax.projects') }}" class="hover:text-gray-700">Projects</a>
+    <a href="{{ url_for('surtax.projects') }}" class="hover:text-slate-300 transition-colors">Projects</a>
     <svg class="w-4 h-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-    <span class="text-gray-900 font-medium">{{ project.title[:50] }}{% if project.title|length > 50 %}...{% endif %}</span>
+    <span class="text-slate-300 font-medium">{{ project.title[:50] }}{% if project.title|length > 50 %}...{% endif %}</span>
 </nav>
 
 <!-- Project Header -->
-<div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+<div class="dark-card p-6 mb-4">
     <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+        <!-- Left: Title + Badges -->
         <div class="flex-1">
-            <div class="flex items-center gap-3 mb-2">
-                <h1 class="text-2xl font-bold text-gray-900">{{ project.title }}</h1>
-                {% if project.is_delayed %}<span class="px-2 py-1 text-xs font-semibold bg-red-100 text-red-700 rounded-full">Delayed</span>{% endif %}
-                {% if project.is_over_budget %}<span class="px-2 py-1 text-xs font-semibold bg-orange-100 text-orange-700 rounded-full">Over Budget</span>{% endif %}
+            <div class="flex items-center gap-2 mb-2 flex-wrap">
+                <h1 class="text-2xl font-bold text-white">{{ project.title }}</h1>
+                {% if project.is_delayed %}
+                <span class="badge badge-delayed">Schedule Delay</span>
+                {% endif %}
+                {% if project.is_over_budget %}
+                <span class="badge badge-overbudget">Over Budget</span>
+                {% endif %}
+                <span class="badge {% if project.risk_level == 'Low' %}badge-risk-low{% elif project.risk_level == 'Medium' %}badge-risk-medium{% elif project.risk_level == 'High' %}badge-risk-high{% else %}badge-risk-critical{% endif %}">
+                    {{ project.risk_level }} Risk
+                </span>
             </div>
-            <div class="flex flex-wrap items-center gap-4 text-sm text-gray-500">
-                <span class="font-medium text-gray-700">{{ project.contract_id }}</span>
-                {% if project.surtax_category %}<span class="px-2 py-0.5 bg-blue-50 text-blue-700 rounded">{{ project.surtax_category }}</span>{% endif %}
-                <span class="px-2 py-0.5 rounded {% if project.status == 'Active' %}bg-green-50 text-green-700{% elif project.status == 'Completed' %}bg-blue-50 text-blue-700{% else %}bg-gray-100 text-gray-600{% endif %}">{{ project.status }}</span>
-                {% if project.school_name %}<a href="{{ url_for('surtax.school_detail', school_name=project.school_name) }}" class="text-blue-600 hover:text-blue-700">{{ project.school_name }}</a>{% endif %}
+            <div class="flex flex-wrap items-center gap-3 text-sm">
+                <span class="flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full
+                        {% if project.surtax_category == 'new_construction' %}bg-blue-500
+                        {% elif project.surtax_category == 'debt_service' %}bg-purple-500
+                        {% elif project.surtax_category in ['maintenance', 'major_maintenance'] %}bg-green-500
+                        {% elif project.surtax_category == 'safety_security' %}bg-red-500
+                        {% elif project.surtax_category == 'technology' %}bg-cyan-500
+                        {% else %}bg-amber-500{% endif %}"></span>
+                    <span class="text-slate-400">{{ project.surtax_category|replace('_', ' ')|title }}</span>
+                </span>
+                <span class="badge {% if project.status == 'Active' %}badge-status-active{% elif project.status == 'Completed' %}badge-status-completed{% else %}badge-status-planning{% endif %}">{{ project.status }}</span>
+                <span class="text-slate-500">{{ project.contract_id }}</span>
+                {% if project.school_name %}
+                <a href="{{ url_for('surtax.school_detail', school_name=project.school_name) }}" class="text-blue-400 hover:text-blue-300">{{ project.school_name }}</a>
+                {% endif %}
             </div>
+            {% if project.purpose %}
+            <div class="mt-3 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                <p class="text-sm text-blue-200"><span class="font-semibold">Project Purpose:</span> {{ project.purpose }}</p>
+            </div>
+            {% endif %}
         </div>
-        <div class="flex items-center gap-4">
+
+        <!-- Right: Completion Donut -->
+        <div class="flex items-center gap-4 flex-shrink-0">
+            <div class="relative w-20 h-20">
+                <svg class="w-20 h-20 -rotate-90" viewBox="0 0 36 36">
+                    <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                          fill="none" stroke="#334155" stroke-width="3"></path>
+                    <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                          fill="none" stroke="{% if project.percent_complete >= 75 %}#22c55e{% elif project.percent_complete >= 50 %}#3b82f6{% elif project.percent_complete >= 25 %}#f59e0b{% else %}#94a3b8{% endif %}"
+                          stroke-width="3" stroke-dasharray="{{ project.percent_complete }}, 100" stroke-linecap="round"></path>
+                </svg>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <span class="text-lg font-bold text-white">{{ project.percent_complete|int }}%</span>
+                </div>
+            </div>
             <div class="text-center">
-                <div class="w-16 h-16 rounded-full flex items-center justify-center text-white text-xl font-bold {% if project.overall_health_score >= 70 %}bg-green-500{% elif project.overall_health_score >= 50 %}bg-yellow-500{% elif project.overall_health_score >= 30 %}bg-orange-500{% else %}bg-red-500{% endif %}">{{ project.overall_health_score }}</div>
-                <p class="text-xs text-gray-500 mt-1">Health</p>
-            </div>
-            <div class="text-center px-3 py-2 rounded-lg {% if project.risk_level == 'Critical' %}bg-red-50 text-red-700{% elif project.risk_level == 'High' %}bg-orange-50 text-orange-700{% elif project.risk_level == 'Medium' %}bg-yellow-50 text-yellow-700{% else %}bg-green-50 text-green-700{% endif %}">
-                <p class="text-sm font-bold">{{ project.risk_level }}</p><p class="text-xs">Risk Level</p>
+                <p class="text-xs text-slate-500">Overall</p>
+                <p class="text-xs text-slate-500">Complete</p>
             </div>
         </div>
     </div>
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t border-gray-200">
-        <div><p class="text-xs text-gray-500">Original Budget</p><p class="text-lg font-bold text-gray-900">{{ project.original_amount|currency }}</p></div>
-        <div><p class="text-xs text-gray-500">Current Budget</p><p class="text-lg font-bold {% if project.is_over_budget %}text-orange-600{% else %}text-gray-900{% endif %}">{{ project.current_amount|currency }}</p></div>
-        <div><p class="text-xs text-gray-500">Total Spent</p><p class="text-lg font-bold text-blue-600">{{ project.total_paid|currency }}</p></div>
-        <div><p class="text-xs text-gray-500">Remaining</p><p class="text-lg font-bold text-green-600">{{ project.remaining_balance|currency }}</p></div>
-    </div>
-    <div class="mt-4">
-        <div class="flex justify-between text-sm mb-1"><span class="text-gray-600">Overall Progress</span><span class="font-medium">{{ project.percent_complete }}%</span></div>
-        <div class="w-full bg-gray-200 rounded-full h-3">
-            <div class="h-3 rounded-full transition-all {% if project.percent_complete >= 75 %}bg-green-500{% elif project.percent_complete >= 50 %}bg-blue-500{% elif project.percent_complete >= 25 %}bg-yellow-500{% else %}bg-gray-400{% endif %}" style="width: {{ project.percent_complete }}%;"></div>
+
+    <!-- KPI Cards Row -->
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mt-5 pt-5 border-t border-slate-700">
+        <div class="kpi-card">
+            <p class="detail-label">Original Budget</p>
+            <p class="text-lg font-bold text-white">{{ project.original_amount|currency }}</p>
+        </div>
+        <div class="kpi-card">
+            <p class="detail-label">Current Budget</p>
+            <p class="text-lg font-bold {% if project.is_over_budget %}text-orange-400{% else %}text-white{% endif %}">{{ project.current_amount|currency }}</p>
+        </div>
+        <div class="kpi-card">
+            <p class="detail-label">Spent to Date</p>
+            <p class="text-lg font-bold text-blue-400">{{ project.total_paid|currency }}</p>
+        </div>
+        <div class="kpi-card">
+            <p class="detail-label">Remaining</p>
+            <p class="text-lg font-bold text-green-400">{{ project.remaining_balance|currency }}</p>
+        </div>
+        <div class="kpi-card">
+            <p class="detail-label">Vendor</p>
+            <p class="text-sm font-semibold text-white truncate">{{ project.vendor_name or 'TBD' }}</p>
+        </div>
+        <div class="kpi-card">
+            <p class="detail-label">Health Score</p>
+            <p class="text-lg font-bold {% if project.overall_health_score >= 70 %}text-green-400{% elif project.overall_health_score >= 50 %}text-yellow-400{% elif project.overall_health_score >= 30 %}text-orange-400{% else %}text-red-400{% endif %}">
+                {{ project.overall_health_score }}/100
+            </p>
         </div>
     </div>
 </div>
 
-<!-- Tabbed Content -->
-<div x-data="{ activeTab: 'overview' }">
-    <div class="bg-white rounded-t-xl shadow-sm border-b border-gray-200">
-        <div class="flex overflow-x-auto">
-            <button @click="activeTab = 'overview'" :class="activeTab === 'overview' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'" class="px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap">Overview</button>
-            <button @click="activeTab = 'financials'" :class="activeTab === 'financials' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'" class="px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap">Financials</button>
-            <button @click="activeTab = 'schedule'" :class="activeTab === 'schedule' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'" class="px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap">Schedule & Phases</button>
-            <button @click="activeTab = 'quality'" :class="activeTab === 'quality' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'" class="px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap">Quality & Safety</button>
-            <button @click="activeTab = 'contractor'" :class="activeTab === 'contractor' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'" class="px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap">Contractor</button>
+<!-- Data Source Notice -->
+<div class="mb-4 p-2 bg-amber-500/10 border border-amber-500/20 rounded-lg flex items-center gap-2">
+    <svg class="w-4 h-4 text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+    </svg>
+    <p class="text-xs text-amber-300">Data Source: This project uses demonstration data for display purposes.</p>
+</div>
+
+<!-- 8-Tab Content -->
+<div x-data="{ tab: 'overview' }">
+    <!-- Tab Bar -->
+    <div class="dark-card overflow-hidden mb-0" style="border-radius: 0.75rem 0.75rem 0 0; border-bottom: 0;">
+        <div class="flex overflow-x-auto" style="scrollbar-width: thin;">
+            <button @click="tab = 'overview'" :class="tab === 'overview' && 'active'" class="tab-btn">Overview</button>
+            <button @click="tab = 'financials'" :class="tab === 'financials' && 'active'" class="tab-btn">Financials</button>
+            <button @click="tab = 'schedule'" :class="tab === 'schedule' && 'active'" class="tab-btn">Schedule & Phases</button>
+            <button @click="tab = 'quality'" :class="tab === 'quality' && 'active'" class="tab-btn">Quality & Safety</button>
+            <button @click="tab = 'contractor'" :class="tab === 'contractor' && 'active'" class="tab-btn">Contractor</button>
+            <button @click="tab = 'community'" :class="tab === 'community' && 'active'" class="tab-btn">Community</button>
+            <button @click="tab = 'actions'" :class="tab === 'actions' && 'active'" class="tab-btn">Committee Actions</button>
+            <button @click="tab = 'documents'" :class="tab === 'documents' && 'active'" class="tab-btn">Documents</button>
         </div>
     </div>
-    <div class="bg-white rounded-b-xl shadow-sm p-6">
-        <!-- Overview Tab -->
-        <div x-show="activeTab === 'overview'">
+
+    <!-- Tab Content -->
+    <div class="dark-card p-6" style="border-radius: 0 0 0.75rem 0.75rem; border-top: 1px solid #334155;">
+
+        <!-- ====== OVERVIEW TAB ====== -->
+        <div x-show="tab === 'overview'">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <h3 class="font-semibold text-gray-900 mb-3">Project Details</h3>
+                    <h3 class="text-lg font-semibold text-white mb-4">Project Details</h3>
                     <dl class="space-y-3">
-                        <div><dt class="text-xs text-gray-500">Description</dt><dd class="text-sm text-gray-900">{{ project.description or 'No description available' }}</dd></div>
-                        <div><dt class="text-xs text-gray-500">Category</dt><dd class="text-sm text-gray-900">{{ project.surtax_category or 'N/A' }}</dd></div>
-                        <div><dt class="text-xs text-gray-500">Expenditure Type</dt><dd class="text-sm text-gray-900">{{ project.expenditure_type or 'N/A' }}</dd></div>
-                        <div><dt class="text-xs text-gray-500">Contract ID</dt><dd class="text-sm text-gray-900">{{ project.contract_id }}</dd></div>
+                        <div>
+                            <dt class="detail-label">Description</dt>
+                            <dd class="detail-value">{{ project.description or project.purpose or 'No description available' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="detail-label">Category</dt>
+                            <dd class="detail-value">{{ project.surtax_category|replace('_', ' ')|title if project.surtax_category else 'N/A' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="detail-label">Expenditure Type</dt>
+                            <dd class="detail-value">{{ project.expenditure_type or project.type or 'N/A' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="detail-label">Contract ID</dt>
+                            <dd class="detail-value">{{ project.contract_id }}</dd>
+                        </div>
+                        {% if project.school_name %}
+                        <div>
+                            <dt class="detail-label">School</dt>
+                            <dd class="detail-value">{{ project.school_name }}</dd>
+                        </div>
+                        {% endif %}
                     </dl>
                 </div>
                 <div>
-                    <h3 class="font-semibold text-gray-900 mb-3">Schedule</h3>
+                    <h3 class="text-lg font-semibold text-white mb-4">Schedule</h3>
                     <dl class="space-y-3">
-                        <div><dt class="text-xs text-gray-500">Start Date</dt><dd class="text-sm text-gray-900">{{ project.start_date|date if project.start_date else 'TBD' }}</dd></div>
-                        <div><dt class="text-xs text-gray-500">Original End Date</dt><dd class="text-sm text-gray-900">{{ project.original_end_date|date if project.original_end_date else 'TBD' }}</dd></div>
-                        <div><dt class="text-xs text-gray-500">Current End Date</dt><dd class="text-sm text-gray-900">{{ project.current_end_date|date if project.current_end_date else 'TBD' }}</dd></div>
-                        {% if project.is_delayed %}<div><dt class="text-xs text-gray-500">Delay</dt><dd class="text-sm text-red-600 font-medium">{{ project.delay_days }} days &mdash; {{ project.delay_reason or 'Reason not specified' }}</dd></div>{% endif %}
+                        <div>
+                            <dt class="detail-label">Start Date</dt>
+                            <dd class="detail-value">{{ project.start_date|date if project.start_date else 'TBD' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="detail-label">Original End Date</dt>
+                            <dd class="detail-value">{{ project.original_end_date|date if project.original_end_date else 'TBD' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="detail-label">Current End Date</dt>
+                            <dd class="detail-value">{{ project.current_end_date|date if project.current_end_date else 'TBD' }}</dd>
+                        </div>
+                        {% if project.is_delayed %}
+                        <div>
+                            <dt class="detail-label">Delay</dt>
+                            <dd class="text-sm text-red-400 font-medium">{{ project.delay_days }} days &mdash; {{ project.delay_reason or 'Reason not specified' }}</dd>
+                        </div>
+                        {% endif %}
                     </dl>
+
+                    <!-- Schedule Visual -->
+                    <div class="mt-6">
+                        <h4 class="text-sm font-medium text-slate-400 mb-2">Timeline Progress</h4>
+                        <div class="w-full bg-slate-700 rounded-full h-2">
+                            <div class="h-2 rounded-full {% if project.percent_complete >= 75 %}bg-green-500{% elif project.percent_complete >= 50 %}bg-blue-500{% else %}bg-amber-500{% endif %}"
+                                 style="width: {{ [project.percent_complete, 100]|min }}%;"></div>
+                        </div>
+                        <div class="flex justify-between text-xs text-slate-500 mt-1">
+                            <span>{{ project.start_date or 'Start' }}</span>
+                            <span>{{ project.current_end_date or 'End' }}</span>
+                        </div>
+                    </div>
                 </div>
             </div>
+
+            <!-- Community Impact Summary (if available) -->
+            {% if community %}
+            <div class="mt-6 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
+                <h4 class="text-sm font-semibold text-emerald-300 mb-1">Community Engagement</h4>
+                <p class="text-sm text-slate-300">{{ community|length }} community meetings held. Latest: {{ community[0].meeting_date|date if community[0].meeting_date else 'N/A' }}</p>
+            </div>
+            {% endif %}
         </div>
 
-        <!-- Financials Tab -->
-        <div x-show="activeTab === 'financials'" style="display: none;">
+        <!-- ====== FINANCIALS TAB ====== -->
+        <div x-show="tab === 'financials'" style="display: none;">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
-                    <h3 class="font-semibold text-gray-900 mb-3">Budget Breakdown</h3>
+                    <h3 class="text-lg font-semibold text-white mb-4">Budget Breakdown</h3>
                     <dl class="space-y-3">
-                        <div class="flex justify-between"><dt class="text-sm text-gray-500">Original Amount</dt><dd class="text-sm font-medium text-gray-900">{{ project.original_amount|currency_full }}</dd></div>
-                        <div class="flex justify-between"><dt class="text-sm text-gray-500">Current Amount</dt><dd class="text-sm font-medium {% if project.is_over_budget %}text-orange-600{% else %}text-gray-900{% endif %}">{{ project.current_amount|currency_full }}</dd></div>
-                        <div class="flex justify-between border-t pt-2"><dt class="text-sm text-gray-500">Total Paid</dt><dd class="text-sm font-medium text-blue-600">{{ project.total_paid|currency_full }}</dd></div>
-                        <div class="flex justify-between"><dt class="text-sm text-gray-500">Remaining</dt><dd class="text-sm font-medium text-green-600">{{ project.remaining_balance|currency_full }}</dd></div>
-                        {% if project.is_over_budget %}<div class="flex justify-between border-t pt-2"><dt class="text-sm text-gray-500">Budget Variance</dt><dd class="text-sm font-bold text-orange-600">+{{ project.budget_variance_pct }}%</dd></div>{% endif %}
+                        <div class="flex justify-between">
+                            <dt class="text-sm text-slate-400">Original Amount</dt>
+                            <dd class="text-sm font-medium text-white">{{ project.original_amount|currency_full }}</dd>
+                        </div>
+                        <div class="flex justify-between">
+                            <dt class="text-sm text-slate-400">Current Amount</dt>
+                            <dd class="text-sm font-medium {% if project.is_over_budget %}text-orange-400{% else %}text-white{% endif %}">{{ project.current_amount|currency_full }}</dd>
+                        </div>
+                        <div class="flex justify-between border-t border-slate-700 pt-2">
+                            <dt class="text-sm text-slate-400">Total Paid</dt>
+                            <dd class="text-sm font-medium text-blue-400">{{ project.total_paid|currency_full }}</dd>
+                        </div>
+                        <div class="flex justify-between">
+                            <dt class="text-sm text-slate-400">Remaining</dt>
+                            <dd class="text-sm font-medium text-green-400">{{ project.remaining_balance|currency_full }}</dd>
+                        </div>
+                        {% if project.is_over_budget %}
+                        <div class="flex justify-between border-t border-slate-700 pt-2">
+                            <dt class="text-sm text-slate-400">Budget Variance</dt>
+                            <dd class="text-sm font-bold text-orange-400">+{{ project.budget_variance_pct }}%</dd>
+                        </div>
+                        {% endif %}
                     </dl>
                 </div>
                 <div>
-                    <h3 class="font-semibold text-gray-900 mb-3">Spending Progress</h3>
+                    <h3 class="text-lg font-semibold text-white mb-4">Spending Progress</h3>
                     {% set spend_pct = (project.total_paid / project.current_amount * 100) if project.current_amount else 0 %}
                     <div class="mb-4">
-                        <div class="flex justify-between text-sm mb-1"><span class="text-gray-600">Budget Utilization</span><span class="font-medium">{{ spend_pct|round(1) }}%</span></div>
-                        <div class="w-full bg-gray-200 rounded-full h-3"><div class="h-3 rounded-full bg-blue-500" style="width: {{ [spend_pct, 100]|min }}%;"></div></div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="text-slate-400">Budget Utilization</span>
+                            <span class="text-slate-200 font-medium">{{ spend_pct|round(1) }}%</span>
+                        </div>
+                        <div class="w-full bg-slate-700 rounded-full h-3">
+                            <div class="h-3 rounded-full bg-blue-500" style="width: {{ [spend_pct, 100]|min }}%;"></div>
+                        </div>
                     </div>
                     <div class="mb-4">
-                        <div class="flex justify-between text-sm mb-1"><span class="text-gray-600">Work Completion</span><span class="font-medium">{{ project.percent_complete }}%</span></div>
-                        <div class="w-full bg-gray-200 rounded-full h-3"><div class="h-3 rounded-full bg-green-500" style="width: {{ project.percent_complete }}%;"></div></div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="text-slate-400">Work Completion</span>
+                            <span class="text-slate-200 font-medium">{{ project.percent_complete }}%</span>
+                        </div>
+                        <div class="w-full bg-slate-700 rounded-full h-3">
+                            <div class="h-3 rounded-full bg-green-500" style="width: {{ project.percent_complete }}%;"></div>
+                        </div>
                     </div>
+                    {% if spend_pct > 0 and project.percent_complete > 0 %}
+                    <div class="p-3 rounded-lg {% if spend_pct > project.percent_complete + 15 %}bg-red-500/10 border border-red-500/20{% elif spend_pct > project.percent_complete %}bg-amber-500/10 border border-amber-500/20{% else %}bg-green-500/10 border border-green-500/20{% endif %}">
+                        <p class="text-xs {% if spend_pct > project.percent_complete + 15 %}text-red-300{% elif spend_pct > project.percent_complete %}text-amber-300{% else %}text-green-300{% endif %}">
+                            {% if spend_pct > project.percent_complete + 15 %}Spending is significantly ahead of work progress
+                            {% elif spend_pct > project.percent_complete %}Spending is slightly ahead of work progress
+                            {% else %}Spending is tracking with or below work progress{% endif %}
+                        </p>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
+
+            <!-- Change Orders -->
             {% if change_orders %}
-            <h3 class="font-semibold text-gray-900 mb-3 mt-6">Change Orders</h3>
+            <h3 class="text-lg font-semibold text-white mb-3 mt-6">Change Orders</h3>
             <div class="overflow-x-auto">
                 <table class="w-full text-sm">
-                    <thead><tr class="border-b border-gray-200"><th class="text-left py-2 text-xs text-gray-500 font-medium">Date</th><th class="text-left py-2 text-xs text-gray-500 font-medium">Description</th><th class="text-right py-2 text-xs text-gray-500 font-medium">Amount</th><th class="text-left py-2 text-xs text-gray-500 font-medium">Status</th></tr></thead>
-                    <tbody>{% for co in change_orders %}<tr class="border-b border-gray-100"><td class="py-2">{{ co.requested_date|date if co.requested_date else 'N/A' }}</td><td class="py-2">{{ co.description or 'No description' }}</td><td class="py-2 text-right font-medium">{{ co.amount|currency if co.amount else 'N/A' }}</td><td class="py-2"><span class="px-2 py-0.5 text-xs rounded-full {% if co.status == 'Approved' %}bg-green-100 text-green-700{% elif co.status == 'Pending' %}bg-yellow-100 text-yellow-700{% else %}bg-gray-100 text-gray-600{% endif %}">{{ co.status or 'Unknown' }}</span></td></tr>{% endfor %}</tbody>
+                    <thead>
+                        <tr class="border-b border-slate-700">
+                            <th class="text-left py-2 text-xs text-slate-500 font-medium">Date</th>
+                            <th class="text-left py-2 text-xs text-slate-500 font-medium">Description</th>
+                            <th class="text-right py-2 text-xs text-slate-500 font-medium">Amount</th>
+                            <th class="text-left py-2 text-xs text-slate-500 font-medium">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for co in change_orders %}
+                        <tr class="border-b border-slate-800">
+                            <td class="py-2 text-slate-300">{{ co.requested_date|date if co.requested_date else 'N/A' }}</td>
+                            <td class="py-2 text-slate-300">{{ co.description or 'No description' }}</td>
+                            <td class="py-2 text-right font-medium text-slate-200">{{ co.amount|currency if co.amount else 'N/A' }}</td>
+                            <td class="py-2">
+                                <span class="badge {% if co.status == 'Approved' %}bg-green-500/20 text-green-300{% elif co.status == 'Pending' %}bg-yellow-500/20 text-yellow-300{% else %}bg-slate-500/20 text-slate-400{% endif %}">
+                                    {{ co.status or 'Unknown' }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
                 </table>
             </div>
             {% endif %}
         </div>
 
-        <!-- Schedule & Phases Tab -->
-        <div x-show="activeTab === 'schedule'" style="display: none;">
+        <!-- ====== SCHEDULE & PHASES TAB ====== -->
+        <div x-show="tab === 'schedule'" style="display: none;">
             {% if phases %}
-            <h3 class="font-semibold text-gray-900 mb-4">Project Phases</h3>
-            <div class="space-y-4">
+            <h3 class="text-lg font-semibold text-white mb-4">Project Phases</h3>
+            <div class="space-y-3">
                 {% for phase in phases %}
-                <div class="border border-gray-200 rounded-lg p-4">
+                <div class="phase-card">
                     <div class="flex items-center justify-between mb-2">
                         <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold {% if phase.status == 'Completed' %}bg-green-100 text-green-700{% elif phase.status == 'Active' %}bg-blue-100 text-blue-700{% else %}bg-gray-100 text-gray-500{% endif %}">{{ phase.phase_order or loop.index }}</div>
-                            <div><h4 class="font-medium text-gray-900">{{ phase.phase_name }}</h4><p class="text-xs text-gray-500">{{ phase.status or 'Pending' }}</p></div>
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold
+                                {% if phase.status == 'Completed' %}bg-green-500/20 text-green-400
+                                {% elif phase.status == 'Active' %}bg-blue-500/20 text-blue-400
+                                {% else %}bg-slate-700 text-slate-500{% endif %}">
+                                {{ phase.phase_order or loop.index }}
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-white">{{ phase.phase_name }}</h4>
+                                <p class="text-xs text-slate-500">{{ phase.status or 'Pending' }}</p>
+                            </div>
                         </div>
-                        <span class="text-sm font-medium">{{ phase.percent_complete or 0 }}%</span>
+                        <span class="text-sm font-bold {% if phase.percent_complete == 100 %}text-green-400{% else %}text-slate-300{% endif %}">{{ phase.percent_complete or 0 }}%</span>
                     </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2"><div class="h-2 rounded-full {% if phase.percent_complete == 100 %}bg-green-500{% else %}bg-blue-500{% endif %}" style="width: {{ phase.percent_complete or 0 }}%;"></div></div>
-                    {% if phase.start_date or phase.end_date %}<p class="text-xs text-gray-500 mt-2">{{ phase.start_date|date if phase.start_date else '?' }} &mdash; {{ phase.end_date|date if phase.end_date else '?' }}</p>{% endif %}
+                    <div class="w-full bg-slate-700 rounded-full h-2">
+                        <div class="h-2 rounded-full transition-all {% if phase.percent_complete == 100 %}bg-green-500{% elif phase.percent_complete > 0 %}bg-blue-500{% else %}bg-slate-600{% endif %}"
+                             style="width: {{ phase.percent_complete or 0 }}%;"></div>
+                    </div>
+                    {% if phase.start_date or phase.end_date %}
+                    <p class="text-xs text-slate-500 mt-2">{{ phase.start_date|date if phase.start_date else '?' }} &mdash; {{ phase.end_date|date if phase.end_date else '?' }}</p>
+                    {% endif %}
                 </div>
                 {% endfor %}
             </div>
             {% else %}
-            <div class="text-center py-8"><p class="text-gray-500">No phase data available for this project</p></div>
+            <div class="text-center py-12">
+                <svg class="w-12 h-12 mx-auto text-slate-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                <p class="text-slate-400">No phase data available for this project</p>
+            </div>
             {% endif %}
         </div>
 
-        <!-- Quality & Safety Tab -->
-        <div x-show="activeTab === 'quality'" style="display: none;">
+        <!-- ====== QUALITY & SAFETY TAB ====== -->
+        <div x-show="tab === 'quality'" style="display: none;">
             {% if inspections %}
-            <h3 class="font-semibold text-gray-900 mb-4">Inspection Log</h3>
+            <h3 class="text-lg font-semibold text-white mb-4">Inspections & Quality Assurance</h3>
             <div class="space-y-3">
                 {% for insp in inspections %}
-                <div class="border border-gray-200 rounded-lg p-4">
+                <div class="inspection-card">
                     <div class="flex items-center justify-between mb-1">
                         <div class="flex items-center gap-3">
-                            <span class="px-2 py-1 text-xs font-medium rounded-full {% if insp.result == 'Pass' %}bg-green-100 text-green-700{% elif insp.result == 'Fail' %}bg-red-100 text-red-700{% else %}bg-yellow-100 text-yellow-700{% endif %}">{{ insp.result or 'Pending' }}</span>
-                            <span class="text-sm font-medium text-gray-900">{{ insp.inspection_type or 'General Inspection' }}</span>
+                            <span class="badge {% if insp.result == 'Pass' %}bg-green-500/20 text-green-300{% elif insp.result == 'Fail' %}bg-red-500/20 text-red-300{% else %}bg-yellow-500/20 text-yellow-300{% endif %}">
+                                {{ insp.result or 'Pending' }}
+                            </span>
+                            <span class="text-sm font-medium text-white">{{ insp.inspection_type or 'General Inspection' }}</span>
                         </div>
-                        <span class="text-sm text-gray-500">{{ insp.inspection_date|date if insp.inspection_date else 'N/A' }}</span>
+                        <span class="text-sm text-slate-500">{{ insp.inspection_date|date if insp.inspection_date else 'N/A' }}</span>
                     </div>
-                    {% if insp.notes %}<p class="text-sm text-gray-600 mt-2">{{ insp.notes }}</p>{% endif %}
-                    {% if insp.inspector_name %}<p class="text-xs text-gray-400 mt-1">Inspector: {{ insp.inspector_name }}</p>{% endif %}
+                    {% if insp.notes %}
+                    <p class="text-sm text-slate-400 mt-2">{{ insp.notes }}</p>
+                    {% endif %}
+                    {% if insp.inspector_name %}
+                    <p class="text-xs text-slate-500 mt-1">Inspector: {{ insp.inspector_name }}</p>
+                    {% endif %}
                 </div>
                 {% endfor %}
             </div>
             {% else %}
-            <div class="text-center py-8"><p class="text-gray-500">No inspection records available</p></div>
+            <div class="text-center py-12">
+                <svg class="w-12 h-12 mx-auto text-slate-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <p class="text-slate-400">No inspection records available</p>
+            </div>
             {% endif %}
         </div>
 
-        <!-- Contractor Tab -->
-        <div x-show="activeTab === 'contractor'" style="display: none;">
+        <!-- ====== CONTRACTOR TAB ====== -->
+        <div x-show="tab === 'contractor'" style="display: none;">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <h3 class="font-semibold text-gray-900 mb-3">Contractor Information</h3>
+                    <h3 class="text-lg font-semibold text-white mb-4">Contractor Information</h3>
                     <dl class="space-y-3">
-                        <div><dt class="text-xs text-gray-500">Vendor Name</dt><dd class="text-sm font-medium text-gray-900">{{ project.vendor_name or 'Not assigned' }}</dd></div>
-                        <div><dt class="text-xs text-gray-500">Contract ID</dt><dd class="text-sm text-gray-900">{{ project.contract_id }}</dd></div>
+                        <div>
+                            <dt class="detail-label">Vendor Name</dt>
+                            <dd class="detail-value font-semibold">{{ project.vendor_name or 'Not assigned' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="detail-label">Contract ID</dt>
+                            <dd class="detail-value">{{ project.contract_id }}</dd>
+                        </div>
+                        <div>
+                            <dt class="detail-label">Contract Type</dt>
+                            <dd class="detail-value">{{ project.type or 'N/A' }}</dd>
+                        </div>
                     </dl>
                 </div>
+                {% if contractor_perf %}
+                <div>
+                    <h3 class="text-lg font-semibold text-white mb-4">Performance Metrics</h3>
+                    <div class="space-y-3">
+                        <!-- Quality Score -->
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-slate-400">Quality Score</span>
+                                <span class="font-medium {% if contractor_perf.quality_score >= 80 %}text-green-400{% elif contractor_perf.quality_score >= 60 %}text-yellow-400{% else %}text-red-400{% endif %}">
+                                    {{ contractor_perf.quality_score }}/100
+                                </span>
+                            </div>
+                            <div class="w-full bg-slate-700 rounded-full h-2">
+                                <div class="h-2 rounded-full {% if contractor_perf.quality_score >= 80 %}bg-green-500{% elif contractor_perf.quality_score >= 60 %}bg-yellow-500{% else %}bg-red-500{% endif %}"
+                                     style="width: {{ contractor_perf.quality_score }}%;"></div>
+                            </div>
+                        </div>
+                        <!-- On-Time Rate -->
+                        {% if contractor_perf.on_time_rate is not none %}
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-slate-400">On-Time Delivery</span>
+                                <span class="font-medium text-slate-200">{{ contractor_perf.on_time_rate }}%</span>
+                            </div>
+                            <div class="w-full bg-slate-700 rounded-full h-2">
+                                <div class="h-2 rounded-full bg-blue-500" style="width: {{ contractor_perf.on_time_rate }}%;"></div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        <!-- On-Budget Rate -->
+                        {% if contractor_perf.on_budget_rate is not none %}
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-slate-400">On-Budget Rate</span>
+                                <span class="font-medium text-slate-200">{{ contractor_perf.on_budget_rate }}%</span>
+                            </div>
+                            <div class="w-full bg-slate-700 rounded-full h-2">
+                                <div class="h-2 rounded-full bg-purple-500" style="width: {{ contractor_perf.on_budget_rate }}%;"></div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        <!-- Deficiency Rate -->
+                        {% if contractor_perf.deficiency_rate is not none %}
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-400">Deficiency Rate</span>
+                            <span class="font-medium {% if contractor_perf.deficiency_rate <= 5 %}text-green-400{% elif contractor_perf.deficiency_rate <= 15 %}text-yellow-400{% else %}text-red-400{% endif %}">
+                                {{ contractor_perf.deficiency_rate }}%
+                            </span>
+                        </div>
+                        {% endif %}
+                        <!-- Safety Record -->
+                        {% if contractor_perf.safety_record %}
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-400">Safety Record</span>
+                            <span class="font-medium text-slate-200">{{ contractor_perf.safety_record }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
             </div>
+        </div>
+
+        <!-- ====== COMMUNITY TAB ====== -->
+        <div x-show="tab === 'community'" style="display: none;">
+            {% if community %}
+            <h3 class="text-lg font-semibold text-white mb-4">Community Engagement</h3>
+            <div class="space-y-3">
+                {% for ce in community %}
+                <div class="inspection-card">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <span class="text-sm font-medium text-white">Community Meeting</span>
+                                {% if ce.location %}<span class="text-xs text-slate-500 ml-2">{{ ce.location }}</span>{% endif %}
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-sm text-slate-400">{{ ce.meeting_date|date if ce.meeting_date else 'N/A' }}</span>
+                            {% if ce.attendee_count %}<p class="text-xs text-slate-500">{{ ce.attendee_count }} attendees</p>{% endif %}
+                        </div>
+                    </div>
+                    {% if ce.feedback_summary %}
+                    <p class="text-sm text-slate-300 mt-2">{{ ce.feedback_summary }}</p>
+                    {% endif %}
+                    {% if ce.concerns_raised %}
+                    <div class="mt-2 p-2 bg-amber-500/10 border border-amber-500/20 rounded">
+                        <p class="text-xs text-amber-300"><span class="font-semibold">Concerns:</span> {{ ce.concerns_raised }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-12">
+                <svg class="w-12 h-12 mx-auto text-slate-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+                <p class="text-slate-400">No community engagement records</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- ====== COMMITTEE ACTIONS TAB ====== -->
+        <div x-show="tab === 'actions'" style="display: none;">
+            {% if actions %}
+            <h3 class="text-lg font-semibold text-white mb-4">Committee Action Items</h3>
+            <div class="space-y-2">
+                {% for action in actions %}
+                <div class="action-row flex items-center justify-between">
+                    <div class="flex items-center gap-3 flex-1 min-w-0">
+                        <div class="w-6 h-6 rounded flex items-center justify-center flex-shrink-0
+                            {% if action.status == 'Completed' %}bg-green-500/20
+                            {% elif action.status == 'In Progress' %}bg-blue-500/20
+                            {% elif action.status == 'Overdue' %}bg-red-500/20
+                            {% else %}bg-slate-700{% endif %}">
+                            {% if action.status == 'Completed' %}
+                            <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            {% elif action.status == 'In Progress' %}
+                            <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            {% else %}
+                            <div class="w-3 h-3 rounded-full bg-slate-600"></div>
+                            {% endif %}
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-sm text-white truncate">{{ action.action_item }}</p>
+                            <p class="text-xs text-slate-500">
+                                {% if action.assignee %}Assigned to: {{ action.assignee }}{% endif %}
+                                {% if action.priority %} &middot; {{ action.priority }} priority{% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 flex-shrink-0 ml-3">
+                        {% if action.due_date %}
+                        <span class="text-xs text-slate-500">Due: {{ action.due_date|date }}</span>
+                        {% endif %}
+                        <span class="badge {% if action.status == 'Completed' %}bg-green-500/20 text-green-300
+                            {% elif action.status == 'In Progress' %}bg-blue-500/20 text-blue-300
+                            {% elif action.status == 'Overdue' %}bg-red-500/20 text-red-300
+                            {% else %}bg-slate-700 text-slate-400{% endif %}">
+                            {{ action.status or 'Pending' }}
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-12">
+                <svg class="w-12 h-12 mx-auto text-slate-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                </svg>
+                <p class="text-slate-400">No committee actions for this project</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- ====== DOCUMENTS TAB ====== -->
+        <div x-show="tab === 'documents'" style="display: none;">
+            {% if documents %}
+            <h3 class="text-lg font-semibold text-white mb-4">Project Documents</h3>
+            <div class="space-y-2">
+                {% for doc in documents %}
+                <div class="action-row flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <svg class="w-5 h-5 text-slate-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                        </svg>
+                        <div>
+                            <p class="text-sm text-white">{{ doc.title or doc.filename or 'Untitled Document' }}</p>
+                            <p class="text-xs text-slate-500">
+                                {% if doc.document_type %}{{ doc.document_type }}{% endif %}
+                                {% if doc.uploaded_date %} &middot; {{ doc.uploaded_date|date }}{% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-12">
+                <svg class="w-12 h-12 mx-auto text-slate-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                </svg>
+                <p class="text-slate-400">No documents uploaded for this project</p>
+                <p class="text-xs text-slate-500 mt-1">Documents will appear here when added</p>
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>
