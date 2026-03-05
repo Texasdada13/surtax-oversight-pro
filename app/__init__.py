@@ -6,11 +6,15 @@ and general contract management with persona-based UI simplification.
 
 from flask import Flask, session, g, redirect, url_for
 from pathlib import Path
+from dotenv import load_dotenv
 import os
 import sys
 
 # Add project root to path so config/ is importable
 sys.path.insert(0, str(Path(__file__).parent.parent))
+
+# Load .env from project root
+load_dotenv(Path(__file__).parent.parent / '.env')
 
 
 def create_app(county: str = None, config_override: dict = None):
