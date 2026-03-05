@@ -53,33 +53,52 @@ def overview():
 
 @surtax_bp.route('/projects')
 def projects():
-    """List all surtax-funded projects."""
+    """List all surtax-funded projects with rich filtering."""
     from app.database import get_db
 
     db = get_db()
     cursor = db.cursor()
 
     # Get filter params
+    search_q = request.args.get('q', '').strip()
     status_filter = request.args.get('status', '')
     category_filter = request.args.get('category', '')
-    sort_by = request.args.get('sort', 'title')
+    type_filter = request.args.get('type', '')
+    school_filter = request.args.get('school', '')
+    delayed_only = request.args.get('delayed', '')
+    overbudget_only = request.args.get('overbudget', '')
+    sort_by = request.args.get('sort', 'budget')
 
     query = '''
         SELECT contract_id, title, school_name, surtax_category, vendor_name,
-               current_amount, total_paid, percent_complete, status,
+               current_amount, total_paid, percent_complete, status, type,
                is_delayed, delay_days, is_over_budget, budget_variance_pct,
-               overall_health_score, risk_level, start_date, current_end_date
+               overall_health_score, risk_level, start_date, current_end_date, purpose
         FROM contracts
         WHERE is_deleted = 0 AND surtax_category IS NOT NULL
     '''
     params = []
 
+    if search_q:
+        query += ' AND (title LIKE ? OR vendor_name LIKE ? OR purpose LIKE ?)'
+        like = f'%{search_q}%'
+        params.extend([like, like, like])
     if status_filter:
         query += ' AND status = ?'
         params.append(status_filter)
     if category_filter:
         query += ' AND surtax_category = ?'
         params.append(category_filter)
+    if type_filter:
+        query += ' AND type = ?'
+        params.append(type_filter)
+    if school_filter:
+        query += ' AND school_name = ?'
+        params.append(school_filter)
+    if delayed_only:
+        query += ' AND is_delayed = 1'
+    if overbudget_only:
+        query += ' AND is_over_budget = 1'
 
     sort_map = {
         'title': 'title ASC',
@@ -88,12 +107,12 @@ def projects():
         'health': 'overall_health_score ASC',
         'school': 'school_name ASC',
     }
-    query += f' ORDER BY {sort_map.get(sort_by, "title ASC")}'
+    query += f' ORDER BY {sort_map.get(sort_by, "current_amount DESC")}'
 
     cursor.execute(query, params)
     projects_list = [dict(row) for row in cursor.fetchall()]
 
-    # Get categories for filter dropdown
+    # Get filter dropdown options
     cursor.execute('''
         SELECT DISTINCT surtax_category FROM contracts
         WHERE is_deleted = 0 AND surtax_category IS NOT NULL
@@ -101,13 +120,50 @@ def projects():
     ''')
     categories = [row[0] for row in cursor.fetchall()]
 
+    cursor.execute('''
+        SELECT DISTINCT type FROM contracts
+        WHERE is_deleted = 0 AND surtax_category IS NOT NULL AND type IS NOT NULL
+        ORDER BY type
+    ''')
+    types = [row[0] for row in cursor.fetchall()]
+
+    cursor.execute('''
+        SELECT DISTINCT school_name FROM contracts
+        WHERE is_deleted = 0 AND surtax_category IS NOT NULL AND school_name IS NOT NULL
+        ORDER BY school_name
+    ''')
+    schools = [row[0] for row in cursor.fetchall()]
+
+    # Build active filters list for badge display
+    active_filters = []
+    if category_filter:
+        active_filters.append(category_filter)
+    if type_filter:
+        active_filters.append(type_filter)
+    if status_filter:
+        active_filters.append(status_filter)
+    if school_filter:
+        active_filters.append(school_filter)
+    if delayed_only:
+        active_filters.append('Delayed')
+    if overbudget_only:
+        active_filters.append('Over Budget')
+
     return render_template('surtax/projects.html',
-                          title='Surtax Projects',
+                          title='Projects',
                           projects=projects_list,
                           categories=categories,
+                          types=types,
+                          schools=schools,
+                          search_q=search_q,
                           current_status=status_filter,
                           current_category=category_filter,
-                          current_sort=sort_by)
+                          current_type=type_filter,
+                          current_school=school_filter,
+                          delayed_only=delayed_only,
+                          overbudget_only=overbudget_only,
+                          current_sort=sort_by,
+                          active_filters=active_filters)
 
 
 @surtax_bp.route('/projects/<contract_id>')
