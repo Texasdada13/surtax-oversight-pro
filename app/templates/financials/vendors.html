@@ -1,59 +1,64 @@
 {% extends "base.html" %}
 {% block content %}
+<style>
+    main { background: #0f172a !important; }
+    main > div { padding: 1.5rem !important; }
+    .dark-card { background: #1e293b; border: 1px solid #334155; border-radius: 0.75rem; }
+</style>
 <div class="space-y-6">
     <div>
-        <h1 class="text-2xl font-bold text-gray-900">Vendor Financial Performance</h1>
-        <p class="text-gray-500">Financial health and performance metrics by vendor</p>
+        <h1 class="text-2xl font-bold text-white">Vendor Financial Performance</h1>
+        <p class="text-slate-400">Financial health and performance metrics by vendor</p>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {% for v in vendors %}
-        <div class="bg-white rounded-xl shadow-sm border p-5 hover:shadow-md transition-shadow">
+        <div class="dark-card p-5 hover: transition-shadow">
             <div class="flex items-start justify-between mb-3">
                 <div>
-                    <h3 class="font-semibold text-gray-900">{{ v.name }}</h3>
-                    <p class="text-sm text-gray-500">{{ v.contract_count or 0 }} contract{{ 's' if (v.contract_count or 0) != 1 }}</p>
+                    <h3 class="font-semibold text-white">{{ v.name }}</h3>
+                    <p class="text-sm text-slate-400">{{ v.contract_count or 0 }} contract{{ 's' if (v.contract_count or 0) != 1 }}</p>
                 </div>
                 {% if v.avg_health %}
                 <span class="inline-flex items-center justify-center w-10 h-10 rounded-full text-sm font-bold
-                    {% if v.avg_health >= 70 %}bg-green-100 text-green-700
-                    {% elif v.avg_health >= 50 %}bg-yellow-100 text-yellow-700
-                    {% else %}bg-red-100 text-red-700{% endif %}">
+                    {% if v.avg_health >= 70 %}bg-green-500/100/20 text-green-300
+                    {% elif v.avg_health >= 50 %}bg-yellow-500/20 text-yellow-300
+                    {% else %}bg-red-500/100/20 text-red-300{% endif %}">
                     {{ v.avg_health|round|int }}
                 </span>
                 {% endif %}
             </div>
             <div class="space-y-2 text-sm">
                 <div class="flex justify-between">
-                    <span class="text-gray-500">Total Value</span>
+                    <span class="text-slate-400">Total Value</span>
                     <span class="font-medium">{{ (v.total_value or 0)|currency_short }}</span>
                 </div>
                 <div class="flex justify-between">
-                    <span class="text-gray-500">Total Paid</span>
+                    <span class="text-slate-400">Total Paid</span>
                     <span class="font-medium">{{ (v.total_paid or 0)|currency_short }}</span>
                 </div>
                 {% if v.total_value and v.total_paid %}
-                <div class="w-full bg-gray-200 rounded-full h-1.5">
+                <div class="w-full bg-slate-700 rounded-full h-1.5">
                     {% set pct = ((v.total_paid or 0) / (v.total_value or 1) * 100) %}
-                    <div class="bg-blue-500 h-1.5 rounded-full" style="width: {{ [pct, 100]|min }}%"></div>
+                    <div class="bg-blue-500/100 h-1.5 rounded-full" style="width: {{ [pct, 100]|min }}%"></div>
                 </div>
                 {% endif %}
                 <div class="flex gap-3 pt-1">
                     {% if v.delayed_count %}
-                    <span class="text-red-600 text-xs">{{ v.delayed_count }} delayed</span>
+                    <span class="text-red-400 text-xs">{{ v.delayed_count }} delayed</span>
                     {% endif %}
                     {% if v.over_budget_count %}
-                    <span class="text-orange-600 text-xs">{{ v.over_budget_count }} over budget</span>
+                    <span class="text-orange-400 text-xs">{{ v.over_budget_count }} over budget</span>
                     {% endif %}
                     {% if not v.delayed_count and not v.over_budget_count %}
-                    <span class="text-green-600 text-xs">On track</span>
+                    <span class="text-green-400 text-xs">On track</span>
                     {% endif %}
                 </div>
             </div>
         </div>
         {% endfor %}
         {% if not vendors %}
-        <div class="col-span-full bg-white rounded-xl shadow-sm border p-12 text-center text-gray-400">
+        <div class="col-span-full dark-card p-12 text-center text-slate-500">
             No vendor data available
         </div>
         {% endif %}

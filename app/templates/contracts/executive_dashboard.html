@@ -1,68 +1,73 @@
 {% extends "base.html" %}
 
 {% block content %}
+<style>
+    main { background: #0f172a !important; }
+    main > div { padding: 1.5rem !important; }
+    .dark-card { background: #1e293b; border: 1px solid #334155; border-radius: 0.75rem; }
+</style>
 <!-- Page Header -->
 <div class="mb-8">
-    <h1 class="text-3xl font-bold text-gray-900">Executive Contract Dashboard</h1>
-    <p class="text-gray-500 mt-1">Analytics and performance metrics across all contracts</p>
+    <h1 class="text-3xl font-bold text-white">Executive Contract Dashboard</h1>
+    <p class="text-slate-400 mt-1">Analytics and performance metrics across all contracts</p>
 </div>
 
 <!-- KPI Row -->
 <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
-    <div class="bg-white rounded-xl shadow-sm p-4 text-center">
-        <p class="text-3xl font-bold text-gray-900">{{ stats.total_projects }}</p>
-        <p class="text-xs text-gray-500">Total Contracts</p>
+    <div class="dark-card p-4 text-center">
+        <p class="text-3xl font-bold text-white">{{ stats.total_projects }}</p>
+        <p class="text-xs text-slate-400">Total Contracts</p>
     </div>
-    <div class="bg-white rounded-xl shadow-sm p-4 text-center">
-        <p class="text-3xl font-bold text-green-600">{{ stats.active_projects }}</p>
-        <p class="text-xs text-gray-500">Active</p>
+    <div class="dark-card p-4 text-center">
+        <p class="text-3xl font-bold text-green-400">{{ stats.active_projects }}</p>
+        <p class="text-xs text-slate-400">Active</p>
     </div>
-    <div class="bg-white rounded-xl shadow-sm p-4 text-center">
-        <p class="text-3xl font-bold text-blue-600">{{ stats.completed_projects }}</p>
-        <p class="text-xs text-gray-500">Completed</p>
+    <div class="dark-card p-4 text-center">
+        <p class="text-3xl font-bold text-blue-400">{{ stats.completed_projects }}</p>
+        <p class="text-xs text-slate-400">Completed</p>
     </div>
-    <div class="bg-white rounded-xl shadow-sm p-4 text-center">
-        <p class="text-3xl font-bold text-blue-600">{{ stats.total_budget|currency }}</p>
-        <p class="text-xs text-gray-500">Portfolio Value</p>
+    <div class="dark-card p-4 text-center">
+        <p class="text-3xl font-bold text-blue-400">{{ stats.total_budget|currency }}</p>
+        <p class="text-xs text-slate-400">Portfolio Value</p>
     </div>
-    <div class="bg-white rounded-xl shadow-sm p-4 text-center">
-        <p class="text-3xl font-bold text-red-600">{{ stats.delayed_count }}</p>
-        <p class="text-xs text-gray-500">Delayed</p>
+    <div class="dark-card p-4 text-center">
+        <p class="text-3xl font-bold text-red-400">{{ stats.delayed_count }}</p>
+        <p class="text-xs text-slate-400">Delayed</p>
     </div>
-    <div class="bg-white rounded-xl shadow-sm p-4 text-center">
-        <p class="text-3xl font-bold text-orange-600">{{ stats.over_budget_count }}</p>
-        <p class="text-xs text-gray-500">Over Budget</p>
+    <div class="dark-card p-4 text-center">
+        <p class="text-3xl font-bold text-orange-400">{{ stats.over_budget_count }}</p>
+        <p class="text-xs text-slate-400">Over Budget</p>
     </div>
 </div>
 
 <!-- Financial Overview & Status -->
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
     <!-- Budget Utilization -->
-    <div class="bg-white rounded-xl shadow-sm p-6">
-        <h2 class="text-lg font-bold text-gray-900 mb-4">Budget Utilization</h2>
+    <div class="dark-card p-6">
+        <h2 class="text-lg font-bold text-white mb-4">Budget Utilization</h2>
         {% set budget_used = (stats.total_spent / stats.total_budget * 100) if stats.total_budget else 0 %}
         <div class="mb-4">
             <div class="flex justify-between text-sm mb-2">
-                <span class="text-gray-600">Total Budget</span>
-                <span class="font-bold text-gray-900">{{ stats.total_budget|currency_full }}</span>
+                <span class="text-slate-400">Total Budget</span>
+                <span class="font-bold text-white">{{ stats.total_budget|currency_full }}</span>
             </div>
             <div class="flex justify-between text-sm mb-2">
-                <span class="text-gray-600">Total Spent</span>
-                <span class="font-bold text-blue-600">{{ stats.total_spent|currency_full }}</span>
+                <span class="text-slate-400">Total Spent</span>
+                <span class="font-bold text-blue-400">{{ stats.total_spent|currency_full }}</span>
             </div>
-            <div class="w-full bg-gray-200 rounded-full h-3 mt-3">
-                <div class="h-3 rounded-full bg-blue-500" style="width: {{ budget_used|round }}%;"></div>
+            <div class="w-full bg-slate-700 rounded-full h-3 mt-3">
+                <div class="h-3 rounded-full bg-blue-500/100" style="width: {{ budget_used|round }}%;"></div>
             </div>
-            <p class="text-xs text-gray-500 mt-1">{{ budget_used|round(1) }}% of total budget utilized</p>
+            <p class="text-xs text-slate-400 mt-1">{{ budget_used|round(1) }}% of total budget utilized</p>
         </div>
-        <div class="pt-4 border-t border-gray-200">
+        <div class="pt-4 border-t border-slate-700">
             <div class="flex justify-between text-sm">
-                <span class="text-gray-600">Avg Completion</span>
-                <span class="font-bold text-gray-900">{{ stats.avg_completion|round(1) if stats.avg_completion else 0 }}%</span>
+                <span class="text-slate-400">Avg Completion</span>
+                <span class="font-bold text-white">{{ stats.avg_completion|round(1) if stats.avg_completion else 0 }}%</span>
             </div>
             <div class="flex justify-between text-sm mt-2">
-                <span class="text-gray-600">Avg Health Score</span>
-                <span class="font-bold {% if stats.avg_health_score and stats.avg_health_score >= 70 %}text-green-600{% elif stats.avg_health_score and stats.avg_health_score >= 50 %}text-yellow-600{% else %}text-red-600{% endif %}">
+                <span class="text-slate-400">Avg Health Score</span>
+                <span class="font-bold {% if stats.avg_health_score and stats.avg_health_score >= 70 %}text-green-400{% elif stats.avg_health_score and stats.avg_health_score >= 50 %}text-yellow-400{% else %}text-red-400{% endif %}">
                     {{ stats.avg_health_score|round(1) if stats.avg_health_score else 0 }}
                 </span>
             </div>
@@ -70,20 +75,20 @@
     </div>
 
     <!-- Status Breakdown -->
-    <div class="bg-white rounded-xl shadow-sm p-6">
-        <h2 class="text-lg font-bold text-gray-900 mb-4">Status Breakdown</h2>
+    <div class="dark-card p-6">
+        <h2 class="text-lg font-bold text-white mb-4">Status Breakdown</h2>
         <div class="space-y-4">
             {% for s in status_breakdown %}
             <div>
                 <div class="flex justify-between text-sm mb-1">
-                    <span class="text-gray-700 font-medium">{{ s.status }}</span>
-                    <span class="text-gray-900">{{ s.count }} contracts &middot; {{ s.total_value|currency }}</span>
+                    <span class="text-slate-300 font-medium">{{ s.status }}</span>
+                    <span class="text-white">{{ s.count }} contracts &middot; {{ s.total_value|currency }}</span>
                 </div>
                 {% set status_pct = (s.count / stats.total_projects * 100) if stats.total_projects else 0 %}
-                <div class="w-full bg-gray-200 rounded-full h-2">
+                <div class="w-full bg-slate-700 rounded-full h-2">
                     <div class="h-2 rounded-full
-                        {% if s.status == 'Active' %}bg-green-500
-                        {% elif s.status == 'Completed' %}bg-blue-500
+                        {% if s.status == 'Active' %}bg-green-500/100
+                        {% elif s.status == 'Completed' %}bg-blue-500/100
                         {% else %}bg-gray-400{% endif %}"
                          style="width: {{ status_pct|round }}%;"></div>
                 </div>
@@ -94,38 +99,38 @@
 </div>
 
 <!-- Vendor Performance -->
-<div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+<div class="dark-card p-6 mb-6">
     <div class="flex items-center justify-between mb-4">
-        <h2 class="text-lg font-bold text-gray-900">Vendor Performance</h2>
-        <a href="{{ url_for('contracts.vendors') }}" class="text-sm text-blue-600 hover:text-blue-700 font-medium">View all &rarr;</a>
+        <h2 class="text-lg font-bold text-white">Vendor Performance</h2>
+        <a href="{{ url_for('contracts.vendors') }}" class="text-sm text-blue-400 hover:text-blue-300 font-medium">View all &rarr;</a>
     </div>
     <div class="overflow-x-auto">
         <table class="w-full text-sm">
             <thead>
-                <tr class="border-b border-gray-200">
-                    <th class="text-left py-2 text-xs text-gray-500 font-medium">Vendor</th>
-                    <th class="text-right py-2 text-xs text-gray-500 font-medium">Contracts</th>
-                    <th class="text-right py-2 text-xs text-gray-500 font-medium">Total Value</th>
-                    <th class="text-right py-2 text-xs text-gray-500 font-medium">Avg Health</th>
-                    <th class="text-right py-2 text-xs text-gray-500 font-medium">Delayed</th>
+                <tr class="border-b border-slate-700">
+                    <th class="text-left py-2 text-xs text-slate-400 font-medium">Vendor</th>
+                    <th class="text-right py-2 text-xs text-slate-400 font-medium">Contracts</th>
+                    <th class="text-right py-2 text-xs text-slate-400 font-medium">Total Value</th>
+                    <th class="text-right py-2 text-xs text-slate-400 font-medium">Avg Health</th>
+                    <th class="text-right py-2 text-xs text-slate-400 font-medium">Delayed</th>
                 </tr>
             </thead>
             <tbody>
                 {% for v in vendor_summary %}
-                <tr class="border-b border-gray-100 hover:bg-gray-50">
-                    <td class="py-2 font-medium text-gray-900">{{ v.vendor_name }}</td>
-                    <td class="py-2 text-right text-gray-600">{{ v.contract_count }}</td>
+                <tr class="border-b border-slate-800 hover:bg-slate-800/50">
+                    <td class="py-2 font-medium text-white">{{ v.vendor_name }}</td>
+                    <td class="py-2 text-right text-slate-400">{{ v.contract_count }}</td>
                     <td class="py-2 text-right font-medium">{{ v.total_value|currency }}</td>
                     <td class="py-2 text-right">
-                        <span class="{% if v.avg_health and v.avg_health >= 70 %}text-green-600{% elif v.avg_health and v.avg_health >= 50 %}text-yellow-600{% else %}text-red-600{% endif %} font-medium">
+                        <span class="{% if v.avg_health and v.avg_health >= 70 %}text-green-400{% elif v.avg_health and v.avg_health >= 50 %}text-yellow-400{% else %}text-red-400{% endif %} font-medium">
                             {{ v.avg_health|round(1) if v.avg_health else '-' }}
                         </span>
                     </td>
                     <td class="py-2 text-right">
                         {% if v.delayed_count > 0 %}
-                        <span class="text-red-600 font-medium">{{ v.delayed_count }}</span>
+                        <span class="text-red-400 font-medium">{{ v.delayed_count }}</span>
                         {% else %}
-                        <span class="text-green-600">0</span>
+                        <span class="text-green-400">0</span>
                         {% endif %}
                     </td>
                 </tr>
@@ -137,21 +142,21 @@
 
 <!-- Monthly Trend -->
 {% if monthly_trend %}
-<div class="bg-white rounded-xl shadow-sm p-6">
-    <h2 class="text-lg font-bold text-gray-900 mb-4">Contract Awards by Month</h2>
+<div class="dark-card p-6">
+    <h2 class="text-lg font-bold text-white mb-4">Contract Awards by Month</h2>
     <div class="space-y-2">
         {% set max_value = monthly_trend|map(attribute='value_started')|max %}
         {% for m in monthly_trend %}
         <div class="flex items-center gap-3">
-            <span class="text-xs text-gray-500 w-16 flex-shrink-0">{{ m.month }}</span>
-            <div class="flex-1 bg-gray-100 rounded-full h-6 relative">
+            <span class="text-xs text-slate-400 w-16 flex-shrink-0">{{ m.month }}</span>
+            <div class="flex-1 bg-slate-800 rounded-full h-6 relative">
                 {% set bar_pct = (m.value_started / max_value * 100) if max_value else 0 %}
-                <div class="h-6 rounded-full bg-blue-500 flex items-center justify-end px-2"
+                <div class="h-6 rounded-full bg-blue-500/100 flex items-center justify-end px-2"
                      style="width: {{ bar_pct|round }}%; min-width: 2rem;">
                     <span class="text-xs text-white font-medium">{{ m.contracts_started }}</span>
                 </div>
             </div>
-            <span class="text-xs text-gray-600 w-16 text-right flex-shrink-0">{{ m.value_started|currency }}</span>
+            <span class="text-xs text-slate-400 w-16 text-right flex-shrink-0">{{ m.value_started|currency }}</span>
         </div>
         {% endfor %}
     </div>

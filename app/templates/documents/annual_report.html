@@ -1,5 +1,10 @@
 {% extends "base.html" %}
 {% block content %}
+<style>
+    main { background: #0f172a !important; }
+    main > div { padding: 1.5rem !important; }
+    .dark-card { background: #1e293b; border: 1px solid #334155; border-radius: 0.75rem; }
+</style>
 <div class="space-y-6">
     <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl p-8 text-white">
         <h1 class="text-3xl font-bold">Annual Report</h1>
@@ -8,84 +13,84 @@
 
     <!-- Portfolio Overview -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="bg-white rounded-xl shadow-sm border p-5 text-center">
-            <p class="text-3xl font-bold text-gray-900">{{ stats.total_contracts or 0 }}</p>
-            <p class="text-sm text-gray-500">Total Contracts</p>
+        <div class="dark-card p-5 text-center">
+            <p class="text-3xl font-bold text-white">{{ stats.total_contracts or 0 }}</p>
+            <p class="text-sm text-slate-400">Total Contracts</p>
         </div>
-        <div class="bg-white rounded-xl shadow-sm border p-5 text-center">
-            <p class="text-3xl font-bold text-green-600">{{ stats.active or 0 }}</p>
-            <p class="text-sm text-gray-500">Active</p>
+        <div class="dark-card p-5 text-center">
+            <p class="text-3xl font-bold text-green-400">{{ stats.active or 0 }}</p>
+            <p class="text-sm text-slate-400">Active</p>
         </div>
-        <div class="bg-white rounded-xl shadow-sm border p-5 text-center">
-            <p class="text-3xl font-bold text-blue-600">{{ stats.completed or 0 }}</p>
-            <p class="text-sm text-gray-500">Completed</p>
+        <div class="dark-card p-5 text-center">
+            <p class="text-3xl font-bold text-blue-400">{{ stats.completed or 0 }}</p>
+            <p class="text-sm text-slate-400">Completed</p>
         </div>
-        <div class="bg-white rounded-xl shadow-sm border p-5 text-center">
-            <p class="text-3xl font-bold text-gray-900">{{ (stats.total_current or 0)|currency_short }}</p>
-            <p class="text-sm text-gray-500">Total Budget</p>
+        <div class="dark-card p-5 text-center">
+            <p class="text-3xl font-bold text-white">{{ (stats.total_current or 0)|currency_short }}</p>
+            <p class="text-sm text-slate-400">Total Budget</p>
         </div>
     </div>
 
     <!-- Financial Summary -->
-    <div class="bg-white rounded-xl shadow-sm border p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Financial Summary</h3>
+    <div class="dark-card p-6">
+        <h3 class="text-lg font-semibold text-white mb-4">Financial Summary</h3>
         <div class="grid grid-cols-3 gap-6">
             <div>
-                <p class="text-sm text-gray-500">Original Budget</p>
+                <p class="text-sm text-slate-400">Original Budget</p>
                 <p class="text-xl font-bold">{{ (stats.total_original or 0)|currency_short }}</p>
             </div>
             <div>
-                <p class="text-sm text-gray-500">Current Budget</p>
+                <p class="text-sm text-slate-400">Current Budget</p>
                 <p class="text-xl font-bold">{{ (stats.total_current or 0)|currency_short }}</p>
             </div>
             <div>
-                <p class="text-sm text-gray-500">Total Spent</p>
-                <p class="text-xl font-bold text-blue-600">{{ (stats.total_spent or 0)|currency_short }}</p>
+                <p class="text-sm text-slate-400">Total Spent</p>
+                <p class="text-xl font-bold text-blue-400">{{ (stats.total_spent or 0)|currency_short }}</p>
             </div>
         </div>
         <div class="mt-4">
             {% set spend_pct = ((stats.total_spent or 0) / (stats.total_current or 1) * 100) %}
-            <div class="w-full bg-gray-200 rounded-full h-3">
+            <div class="w-full bg-slate-700 rounded-full h-3">
                 <div class="bg-blue-600 h-3 rounded-full" style="width: {{ [spend_pct, 100]|min }}%"></div>
             </div>
-            <p class="text-xs text-gray-400 mt-1">{{ "%.1f"|format(spend_pct) }}% of budget spent</p>
+            <p class="text-xs text-slate-500 mt-1">{{ "%.1f"|format(spend_pct) }}% of budget spent</p>
         </div>
     </div>
 
     <!-- Health & Risk -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="bg-white rounded-xl shadow-sm border p-5 text-center">
-            <p class="text-sm text-gray-500">Avg Health Score</p>
-            <p class="text-4xl font-bold {% if (stats.avg_health or 0) >= 70 %}text-green-600{% elif (stats.avg_health or 0) >= 50 %}text-yellow-600{% else %}text-red-600{% endif %}">
+        <div class="dark-card p-5 text-center">
+            <p class="text-sm text-slate-400">Avg Health Score</p>
+            <p class="text-4xl font-bold {% if (stats.avg_health or 0) >= 70 %}text-green-400{% elif (stats.avg_health or 0) >= 50 %}text-yellow-400{% else %}text-red-400{% endif %}">
                 {{ "%.0f"|format(stats.avg_health or 0) }}
             </p>
         </div>
-        <div class="bg-white rounded-xl shadow-sm border p-5 text-center">
-            <p class="text-sm text-gray-500">Delayed Projects</p>
-            <p class="text-4xl font-bold text-red-600">{{ stats.delayed or 0 }}</p>
+        <div class="dark-card p-5 text-center">
+            <p class="text-sm text-slate-400">Delayed Projects</p>
+            <p class="text-4xl font-bold text-red-400">{{ stats.delayed or 0 }}</p>
         </div>
-        <div class="bg-white rounded-xl shadow-sm border p-5 text-center">
-            <p class="text-sm text-gray-500">Over Budget</p>
-            <p class="text-4xl font-bold text-orange-600">{{ stats.over_budget or 0 }}</p>
+        <div class="dark-card p-5 text-center">
+            <p class="text-sm text-slate-400">Over Budget</p>
+            <p class="text-4xl font-bold text-orange-400">{{ stats.over_budget or 0 }}</p>
         </div>
     </div>
 
     <!-- By Category -->
     {% if categories %}
-    <div class="bg-white rounded-xl shadow-sm border">
-        <div class="p-5 border-b"><h3 class="font-semibold text-gray-900">Spending by Category</h3></div>
+    <div class="dark-card">
+        <div class="p-5 border-b"><h3 class="font-semibold text-white">Spending by Category</h3></div>
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
-                <thead class="bg-gray-50">
+                <thead class="bg-slate-800/50">
                     <tr>
-                        <th class="px-4 py-3 text-left font-medium text-gray-600">Category</th>
-                        <th class="px-4 py-3 text-center font-medium text-gray-600">Projects</th>
-                        <th class="px-4 py-3 text-right font-medium text-gray-600">Budget</th>
-                        <th class="px-4 py-3 text-right font-medium text-gray-600">Spent</th>
-                        <th class="px-4 py-3 text-center font-medium text-gray-600">Avg Health</th>
+                        <th class="px-4 py-3 text-left font-medium text-slate-400">Category</th>
+                        <th class="px-4 py-3 text-center font-medium text-slate-400">Projects</th>
+                        <th class="px-4 py-3 text-right font-medium text-slate-400">Budget</th>
+                        <th class="px-4 py-3 text-right font-medium text-slate-400">Spent</th>
+                        <th class="px-4 py-3 text-center font-medium text-slate-400">Avg Health</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y">
+                <tbody class="divide-y divide-slate-800">
                     {% for c in categories %}
                     <tr>
                         <td class="px-4 py-3 font-medium">{{ c.surtax_category }}</td>
@@ -103,18 +108,18 @@
 
     <!-- Top Vendors -->
     {% if top_vendors %}
-    <div class="bg-white rounded-xl shadow-sm border">
-        <div class="p-5 border-b"><h3 class="font-semibold text-gray-900">Top 10 Vendors by Value</h3></div>
+    <div class="dark-card">
+        <div class="p-5 border-b"><h3 class="font-semibold text-white">Top 10 Vendors by Value</h3></div>
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
-                <thead class="bg-gray-50">
+                <thead class="bg-slate-800/50">
                     <tr>
-                        <th class="px-4 py-3 text-left font-medium text-gray-600">Vendor</th>
-                        <th class="px-4 py-3 text-center font-medium text-gray-600">Contracts</th>
-                        <th class="px-4 py-3 text-right font-medium text-gray-600">Total Value</th>
+                        <th class="px-4 py-3 text-left font-medium text-slate-400">Vendor</th>
+                        <th class="px-4 py-3 text-center font-medium text-slate-400">Contracts</th>
+                        <th class="px-4 py-3 text-right font-medium text-slate-400">Total Value</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y">
+                <tbody class="divide-y divide-slate-800">
                     {% for v in top_vendors %}
                     <tr>
                         <td class="px-4 py-3 font-medium">{{ v.vendor_name }}</td>

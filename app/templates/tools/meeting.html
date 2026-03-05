@@ -1,10 +1,15 @@
 {% extends "base.html" %}
 {% block content %}
+<style>
+    main { background: #0f172a !important; }
+    main > div { padding: 1.5rem !important; }
+    .dark-card { background: #1e293b; border: 1px solid #334155; border-radius: 0.75rem; }
+</style>
 <div class="space-y-6">
     <div class="flex items-center justify-between">
         <div>
-            <h1 class="text-2xl font-bold text-gray-900">Meeting Preparation</h1>
-            <p class="text-gray-500">Key data points and talking points for your next committee meeting</p>
+            <h1 class="text-2xl font-bold text-white">Meeting Preparation</h1>
+            <p class="text-slate-400">Key data points and talking points for your next committee meeting</p>
         </div>
         <a href="{{ url_for('tools.meeting_present') }}" target="_blank"
            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm flex items-center gap-2">
@@ -15,59 +20,59 @@
 
     <!-- Quick Stats -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="bg-white rounded-xl shadow-sm border p-4 text-center">
-            <p class="text-3xl font-bold text-gray-900">{{ stats.active or 0 }}</p>
-            <p class="text-sm text-gray-500">Active Projects</p>
+        <div class="dark-card p-4 text-center">
+            <p class="text-3xl font-bold text-white">{{ stats.active or 0 }}</p>
+            <p class="text-sm text-slate-400">Active Projects</p>
         </div>
-        <div class="bg-white rounded-xl shadow-sm border p-4 text-center">
-            <p class="text-3xl font-bold text-blue-600">{{ (stats.total_budget or 0)|currency_short }}</p>
-            <p class="text-sm text-gray-500">Total Budget</p>
+        <div class="dark-card p-4 text-center">
+            <p class="text-3xl font-bold text-blue-400">{{ (stats.total_budget or 0)|currency_short }}</p>
+            <p class="text-sm text-slate-400">Total Budget</p>
         </div>
-        <div class="bg-white rounded-xl shadow-sm border p-4 text-center">
-            <p class="text-3xl font-bold {% if (stats.delayed or 0) > 0 %}text-red-600{% else %}text-green-600{% endif %}">{{ stats.delayed or 0 }}</p>
-            <p class="text-sm text-gray-500">Delayed</p>
+        <div class="dark-card p-4 text-center">
+            <p class="text-3xl font-bold {% if (stats.delayed or 0) > 0 %}text-red-400{% else %}text-green-400{% endif %}">{{ stats.delayed or 0 }}</p>
+            <p class="text-sm text-slate-400">Delayed</p>
         </div>
-        <div class="bg-white rounded-xl shadow-sm border p-4 text-center">
-            <p class="text-3xl font-bold {% if (stats.avg_health or 0) >= 70 %}text-green-600{% elif (stats.avg_health or 0) >= 50 %}text-yellow-600{% else %}text-red-600{% endif %}">{{ "%.0f"|format(stats.avg_health or 0) }}</p>
-            <p class="text-sm text-gray-500">Avg Health</p>
+        <div class="dark-card p-4 text-center">
+            <p class="text-3xl font-bold {% if (stats.avg_health or 0) >= 70 %}text-green-400{% elif (stats.avg_health or 0) >= 50 %}text-yellow-400{% else %}text-red-400{% endif %}">{{ "%.0f"|format(stats.avg_health or 0) }}</p>
+            <p class="text-sm text-slate-400">Avg Health</p>
         </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Open Concerns -->
-        <div class="bg-white rounded-xl shadow-sm border">
-            <div class="p-4 border-b"><h3 class="font-semibold text-gray-900">Open Concerns</h3></div>
+        <div class="dark-card">
+            <div class="p-4 border-b"><h3 class="font-semibold text-white">Open Concerns</h3></div>
             <div class="p-4 space-y-2">
                 {% for c in concerns %}
                 <div class="p-3 rounded-lg bg-{{ 'red' if c.severity == 'Critical' else 'yellow' if c.severity == 'High' else 'gray' }}-50 border">
-                    <p class="font-medium text-sm text-gray-900">{{ c.title }}</p>
-                    <p class="text-xs text-gray-500">{{ c.contract_title or '' }} &bull; {{ c.severity }} &bull; {{ c.created_date|date if c.created_date else '' }}</p>
+                    <p class="font-medium text-sm text-white">{{ c.title }}</p>
+                    <p class="text-xs text-slate-400">{{ c.contract_title or '' }} &bull; {{ c.severity }} &bull; {{ c.created_date|date if c.created_date else '' }}</p>
                 </div>
                 {% endfor %}
                 {% if not concerns %}
-                <p class="text-gray-400 text-sm py-4 text-center">No open concerns</p>
+                <p class="text-slate-500 text-sm py-4 text-center">No open concerns</p>
                 {% endif %}
             </div>
         </div>
 
         <!-- Action Items -->
-        <div class="bg-white rounded-xl shadow-sm border">
-            <div class="p-4 border-b"><h3 class="font-semibold text-gray-900">Open Action Items</h3></div>
+        <div class="dark-card">
+            <div class="p-4 border-b"><h3 class="font-semibold text-white">Open Action Items</h3></div>
             <div class="p-4 space-y-2">
                 {% for a in actions %}
-                <div class="p-3 rounded-lg bg-gray-50 border flex justify-between items-start">
+                <div class="p-3 rounded-lg bg-slate-800/50 border flex justify-between items-start">
                     <div>
-                        <p class="font-medium text-sm text-gray-900">{{ a.action_item }}</p>
-                        <p class="text-xs text-gray-500">{{ a.assignee or 'Unassigned' }} &bull; Due: {{ a.due_date|date if a.due_date else 'TBD' }}</p>
+                        <p class="font-medium text-sm text-white">{{ a.action_item }}</p>
+                        <p class="text-xs text-slate-400">{{ a.assignee or 'Unassigned' }} &bull; Due: {{ a.due_date|date if a.due_date else 'TBD' }}</p>
                     </div>
                     <span class="px-2 py-0.5 text-xs rounded-full
-                        {% if a.priority == 'High' %}bg-red-100 text-red-700
-                        {% elif a.priority == 'Medium' %}bg-yellow-100 text-yellow-700
-                        {% else %}bg-gray-100 text-gray-600{% endif %}">{{ a.priority }}</span>
+                        {% if a.priority == 'High' %}bg-red-500/100/20 text-red-300
+                        {% elif a.priority == 'Medium' %}bg-yellow-500/20 text-yellow-300
+                        {% else %}bg-slate-800 text-slate-400{% endif %}">{{ a.priority }}</span>
                 </div>
                 {% endfor %}
                 {% if not actions %}
-                <p class="text-gray-400 text-sm py-4 text-center">No open action items</p>
+                <p class="text-slate-500 text-sm py-4 text-center">No open action items</p>
                 {% endif %}
             </div>
         </div>

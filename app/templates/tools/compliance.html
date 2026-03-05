@@ -1,53 +1,58 @@
 {% extends "base.html" %}
 {% block content %}
+<style>
+    main { background: #0f172a !important; }
+    main > div { padding: 1.5rem !important; }
+    .dark-card { background: #1e293b; border: 1px solid #334155; border-radius: 0.75rem; }
+</style>
 <div class="space-y-6">
     <div>
-        <h1 class="text-2xl font-bold text-gray-900">Compliance Dashboard</h1>
-        <p class="text-gray-500">Monitor insurance, bonding, board approvals, and procurement compliance</p>
+        <h1 class="text-2xl font-bold text-white">Compliance Dashboard</h1>
+        <p class="text-slate-400">Monitor insurance, bonding, board approvals, and procurement compliance</p>
     </div>
 
     <!-- Summary -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="bg-white rounded-xl shadow-sm border p-5">
-            <p class="text-sm text-gray-500">Total Active Contracts</p>
-            <p class="text-3xl font-bold text-gray-900">{{ total }}</p>
+        <div class="dark-card p-5">
+            <p class="text-sm text-slate-400">Total Active Contracts</p>
+            <p class="text-3xl font-bold text-white">{{ total }}</p>
         </div>
-        <div class="bg-white rounded-xl shadow-sm border p-5">
-            <p class="text-sm text-gray-500">Fully Compliant</p>
-            <p class="text-3xl font-bold text-green-600">{{ compliant }}</p>
-            <p class="text-xs text-gray-400">{{ "%.0f"|format(compliant / (total or 1) * 100) }}% compliance rate</p>
+        <div class="dark-card p-5">
+            <p class="text-sm text-slate-400">Fully Compliant</p>
+            <p class="text-3xl font-bold text-green-400">{{ compliant }}</p>
+            <p class="text-xs text-slate-500">{{ "%.0f"|format(compliant / (total or 1) * 100) }}% compliance rate</p>
         </div>
-        <div class="bg-white rounded-xl shadow-sm border p-5">
-            <p class="text-sm text-gray-500">Issues Found</p>
-            <p class="text-3xl font-bold text-red-600">{{ issues|length }}</p>
+        <div class="dark-card p-5">
+            <p class="text-sm text-slate-400">Issues Found</p>
+            <p class="text-3xl font-bold text-red-400">{{ issues|length }}</p>
         </div>
     </div>
 
     <!-- Issues -->
     {% if issues %}
-    <div class="bg-white rounded-xl shadow-sm border">
-        <div class="p-5 border-b"><h3 class="font-semibold text-gray-900">Compliance Issues</h3></div>
+    <div class="dark-card">
+        <div class="p-5 border-b"><h3 class="font-semibold text-white">Compliance Issues</h3></div>
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
-                <thead class="bg-gray-50">
+                <thead class="bg-slate-800/50">
                     <tr>
-                        <th class="px-4 py-3 text-left font-medium text-gray-600">Contract</th>
-                        <th class="px-4 py-3 text-left font-medium text-gray-600">Issue</th>
-                        <th class="px-4 py-3 text-center font-medium text-gray-600">Severity</th>
+                        <th class="px-4 py-3 text-left font-medium text-slate-400">Contract</th>
+                        <th class="px-4 py-3 text-left font-medium text-slate-400">Issue</th>
+                        <th class="px-4 py-3 text-center font-medium text-slate-400">Severity</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y">
+                <tbody class="divide-y divide-slate-800">
                     {% for i in issues %}
-                    <tr class="hover:bg-gray-50">
+                    <tr class="hover:bg-slate-800/50">
                         <td class="px-4 py-3">
-                            <a href="{{ url_for('contracts.contract_detail', contract_id=i.contract_id) }}" class="text-blue-600 hover:underline">{{ i.contract }}</a>
+                            <a href="{{ url_for('contracts.contract_detail', contract_id=i.contract_id) }}" class="text-blue-400 hover:text-blue-300">{{ i.contract }}</a>
                         </td>
-                        <td class="px-4 py-3 text-gray-600">{{ i.issue }}</td>
+                        <td class="px-4 py-3 text-slate-400">{{ i.issue }}</td>
                         <td class="px-4 py-3 text-center">
                             <span class="px-2 py-0.5 text-xs rounded-full
-                                {% if i.severity == 'Critical' %}bg-red-100 text-red-700
-                                {% elif i.severity == 'High' %}bg-orange-100 text-orange-700
-                                {% else %}bg-yellow-100 text-yellow-700{% endif %}">
+                                {% if i.severity == 'Critical' %}bg-red-500/100/20 text-red-300
+                                {% elif i.severity == 'High' %}bg-orange-500/100/20 text-orange-300
+                                {% else %}bg-yellow-500/20 text-yellow-300{% endif %}">
                                 {{ i.severity }}
                             </span>
                         </td>
@@ -58,9 +63,9 @@
         </div>
     </div>
     {% else %}
-    <div class="bg-green-50 border border-green-200 rounded-xl p-8 text-center">
-        <p class="text-green-800 font-medium text-lg">All Contracts Compliant</p>
-        <p class="text-green-600 text-sm mt-1">No compliance issues found across active contracts</p>
+    <div class="bg-green-500/10 border border-green-200 rounded-xl p-8 text-center">
+        <p class="text-green-300 font-medium text-lg">All Contracts Compliant</p>
+        <p class="text-green-400 text-sm mt-1">No compliance issues found across active contracts</p>
     </div>
     {% endif %}
 </div>

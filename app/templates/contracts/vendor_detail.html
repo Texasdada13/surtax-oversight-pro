@@ -1,36 +1,41 @@
 {% extends "base.html" %}
 
 {% block content %}
+<style>
+    main { background: #0f172a !important; }
+    main > div { padding: 1.5rem !important; }
+    .dark-card { background: #1e293b; border: 1px solid #334155; border-radius: 0.75rem; }
+</style>
 <!-- Back Link -->
 <div class="mb-4">
-    <a href="{{ url_for('contracts.vendors') }}" class="text-sm text-blue-600 hover:text-blue-700 font-medium">&larr; Back to Vendors</a>
+    <a href="{{ url_for('contracts.vendors') }}" class="text-sm text-blue-400 hover:text-blue-300 font-medium">&larr; Back to Vendors</a>
 </div>
 
 <!-- Vendor Header -->
-<div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+<div class="dark-card p-6 mb-6">
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-            <h1 class="text-3xl font-bold text-gray-900">{{ vendor.name }}</h1>
-            <div class="flex items-center gap-3 mt-2 text-sm text-gray-500">
+            <h1 class="text-3xl font-bold text-white">{{ vendor.name }}</h1>
+            <div class="flex items-center gap-3 mt-2 text-sm text-slate-400">
                 <span>{{ vendor.headquarters_city or 'Unknown' }}, {{ vendor.headquarters_state or 'FL' }}</span>
                 <span class="px-2 py-0.5 text-xs font-medium rounded-full
-                    {% if vendor.vendor_size == 'Large' %}bg-purple-100 text-purple-700
-                    {% elif vendor.vendor_size == 'Medium' %}bg-blue-100 text-blue-700
-                    {% else %}bg-green-100 text-green-700{% endif %}">
+                    {% if vendor.vendor_size == 'Large' %}bg-purple-500/20 text-purple-300
+                    {% elif vendor.vendor_size == 'Medium' %}bg-blue-500/100/20 text-blue-300
+                    {% else %}bg-green-500/100/20 text-green-300{% endif %}">
                     {{ vendor.vendor_size or 'Unknown' }}
                 </span>
                 <span class="px-2 py-0.5 text-xs font-medium rounded-full
-                    {% if vendor.status == 'Active' %}bg-green-100 text-green-700{% else %}bg-gray-100 text-gray-700{% endif %}">
+                    {% if vendor.status == 'Active' %}bg-green-500/100/20 text-green-300{% else %}bg-slate-800 text-slate-300{% endif %}">
                     {{ vendor.status }}
                 </span>
             </div>
         </div>
         <div class="flex items-center gap-4">
             <div class="text-center">
-                <p class="text-2xl font-bold {% if vendor.performance_score and vendor.performance_score >= 80 %}text-green-600{% elif vendor.performance_score and vendor.performance_score >= 60 %}text-yellow-600{% else %}text-red-600{% endif %}">
+                <p class="text-2xl font-bold {% if vendor.performance_score and vendor.performance_score >= 80 %}text-green-400{% elif vendor.performance_score and vendor.performance_score >= 60 %}text-yellow-400{% else %}text-red-400{% endif %}">
                     {{ vendor.performance_score|round(1) if vendor.performance_score else '-' }}
                 </p>
-                <p class="text-xs text-gray-500">Performance Score</p>
+                <p class="text-xs text-slate-400">Performance Score</p>
             </div>
         </div>
     </div>
@@ -38,115 +43,115 @@
 
 <!-- Stats Grid -->
 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-    <div class="bg-white rounded-xl shadow-sm p-4 text-center">
-        <p class="text-3xl font-bold text-gray-900">{{ stats.total_contracts }}</p>
-        <p class="text-xs text-gray-500">Total Contracts</p>
+    <div class="dark-card p-4 text-center">
+        <p class="text-3xl font-bold text-white">{{ stats.total_contracts }}</p>
+        <p class="text-xs text-slate-400">Total Contracts</p>
     </div>
-    <div class="bg-white rounded-xl shadow-sm p-4 text-center">
-        <p class="text-3xl font-bold text-blue-600">{{ stats.total_value|currency }}</p>
-        <p class="text-xs text-gray-500">Total Value</p>
+    <div class="dark-card p-4 text-center">
+        <p class="text-3xl font-bold text-blue-400">{{ stats.total_value|currency }}</p>
+        <p class="text-xs text-slate-400">Total Value</p>
     </div>
-    <div class="bg-white rounded-xl shadow-sm p-4 text-center">
-        <p class="text-3xl font-bold text-green-600">{{ stats.avg_completion|round(1) if stats.avg_completion else 0 }}%</p>
-        <p class="text-xs text-gray-500">Avg Completion</p>
+    <div class="dark-card p-4 text-center">
+        <p class="text-3xl font-bold text-green-400">{{ stats.avg_completion|round(1) if stats.avg_completion else 0 }}%</p>
+        <p class="text-xs text-slate-400">Avg Completion</p>
     </div>
-    <div class="bg-white rounded-xl shadow-sm p-4 text-center">
-        <p class="text-3xl font-bold {% if stats.avg_health and stats.avg_health >= 70 %}text-green-600{% elif stats.avg_health and stats.avg_health >= 50 %}text-yellow-600{% else %}text-red-600{% endif %}">
+    <div class="dark-card p-4 text-center">
+        <p class="text-3xl font-bold {% if stats.avg_health and stats.avg_health >= 70 %}text-green-400{% elif stats.avg_health and stats.avg_health >= 50 %}text-yellow-400{% else %}text-red-400{% endif %}">
             {{ stats.avg_health|round(1) if stats.avg_health else 0 }}
         </p>
-        <p class="text-xs text-gray-500">Avg Health Score</p>
+        <p class="text-xs text-slate-400">Avg Health Score</p>
     </div>
 </div>
 
 <!-- Vendor Details -->
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-    <div class="bg-white rounded-xl shadow-sm p-6">
-        <h2 class="text-lg font-bold text-gray-900 mb-4">Vendor Information</h2>
+    <div class="dark-card p-6">
+        <h2 class="text-lg font-bold text-white mb-4">Vendor Information</h2>
         <div class="space-y-3 text-sm">
             {% if vendor.contact_name %}
             <div class="flex justify-between">
-                <span class="text-gray-500">Contact</span>
-                <span class="text-gray-900 font-medium">{{ vendor.contact_name }}</span>
+                <span class="text-slate-400">Contact</span>
+                <span class="text-white font-medium">{{ vendor.contact_name }}</span>
             </div>
             {% endif %}
             {% if vendor.email %}
             <div class="flex justify-between">
-                <span class="text-gray-500">Email</span>
-                <span class="text-gray-900">{{ vendor.email }}</span>
+                <span class="text-slate-400">Email</span>
+                <span class="text-white">{{ vendor.email }}</span>
             </div>
             {% endif %}
             {% if vendor.phone %}
             <div class="flex justify-between">
-                <span class="text-gray-500">Phone</span>
-                <span class="text-gray-900">{{ vendor.phone }}</span>
+                <span class="text-slate-400">Phone</span>
+                <span class="text-white">{{ vendor.phone }}</span>
             </div>
             {% endif %}
             {% if vendor.years_in_business %}
             <div class="flex justify-between">
-                <span class="text-gray-500">Years in Business</span>
-                <span class="text-gray-900 font-medium">{{ vendor.years_in_business }}</span>
+                <span class="text-slate-400">Years in Business</span>
+                <span class="text-white font-medium">{{ vendor.years_in_business }}</span>
             </div>
             {% endif %}
             {% if vendor.bonding_capacity %}
             <div class="flex justify-between">
-                <span class="text-gray-500">Bonding Capacity</span>
-                <span class="text-gray-900 font-medium">{{ vendor.bonding_capacity|currency }}</span>
+                <span class="text-slate-400">Bonding Capacity</span>
+                <span class="text-white font-medium">{{ vendor.bonding_capacity|currency }}</span>
             </div>
             {% endif %}
         </div>
     </div>
 
-    <div class="bg-white rounded-xl shadow-sm p-6">
-        <h2 class="text-lg font-bold text-gray-900 mb-4">Financial Summary</h2>
+    <div class="dark-card p-6">
+        <h2 class="text-lg font-bold text-white mb-4">Financial Summary</h2>
         <div class="space-y-3 text-sm">
             <div class="flex justify-between">
-                <span class="text-gray-500">Total Contract Value</span>
-                <span class="text-gray-900 font-bold">{{ stats.total_value|currency }}</span>
+                <span class="text-slate-400">Total Contract Value</span>
+                <span class="text-white font-bold">{{ stats.total_value|currency }}</span>
             </div>
             <div class="flex justify-between">
-                <span class="text-gray-500">Total Paid</span>
-                <span class="text-blue-600 font-bold">{{ stats.total_paid|currency }}</span>
+                <span class="text-slate-400">Total Paid</span>
+                <span class="text-blue-400 font-bold">{{ stats.total_paid|currency }}</span>
             </div>
             {% set remaining = (stats.total_value or 0) - (stats.total_paid or 0) %}
             <div class="flex justify-between">
-                <span class="text-gray-500">Remaining</span>
-                <span class="text-green-600 font-bold">{{ remaining|currency }}</span>
+                <span class="text-slate-400">Remaining</span>
+                <span class="text-green-400 font-bold">{{ remaining|currency }}</span>
             </div>
             {% set pct_used = (stats.total_paid / stats.total_value * 100) if stats.total_value else 0 %}
-            <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
-                <div class="h-2 rounded-full bg-blue-500" style="width: {{ pct_used|round }}%;"></div>
+            <div class="w-full bg-slate-700 rounded-full h-2 mt-2">
+                <div class="h-2 rounded-full bg-blue-500/100" style="width: {{ pct_used|round }}%;"></div>
             </div>
-            <p class="text-xs text-gray-500">{{ pct_used|round(1) }}% utilized</p>
+            <p class="text-xs text-slate-400">{{ pct_used|round(1) }}% utilized</p>
         </div>
     </div>
 
-    <div class="bg-white rounded-xl shadow-sm p-6">
-        <h2 class="text-lg font-bold text-gray-900 mb-4">Risk Summary</h2>
+    <div class="dark-card p-6">
+        <h2 class="text-lg font-bold text-white mb-4">Risk Summary</h2>
         <div class="space-y-3 text-sm">
             <div class="flex justify-between">
-                <span class="text-gray-500">Delayed Contracts</span>
-                <span class="{% if stats.delayed_count > 0 %}text-red-600{% else %}text-green-600{% endif %} font-bold">{{ stats.delayed_count }}</span>
+                <span class="text-slate-400">Delayed Contracts</span>
+                <span class="{% if stats.delayed_count > 0 %}text-red-400{% else %}text-green-400{% endif %} font-bold">{{ stats.delayed_count }}</span>
             </div>
             <div class="flex justify-between">
-                <span class="text-gray-500">Over Budget</span>
-                <span class="{% if stats.over_budget_count > 0 %}text-orange-600{% else %}text-green-600{% endif %} font-bold">{{ stats.over_budget_count }}</span>
+                <span class="text-slate-400">Over Budget</span>
+                <span class="{% if stats.over_budget_count > 0 %}text-orange-400{% else %}text-green-400{% endif %} font-bold">{{ stats.over_budget_count }}</span>
             </div>
         </div>
         {% if vendor.minority_owned or vendor.woman_owned or vendor.small_business or vendor.local_business %}
-        <div class="mt-4 pt-4 border-t border-gray-200">
-            <p class="text-xs text-gray-500 uppercase tracking-wider mb-2">Certifications</p>
+        <div class="mt-4 pt-4 border-t border-slate-700">
+            <p class="text-xs text-slate-400 uppercase tracking-wider mb-2">Certifications</p>
             <div class="flex flex-wrap gap-2">
                 {% if vendor.minority_owned %}
-                <span class="px-2 py-1 text-xs bg-yellow-100 text-yellow-700 rounded-full">Minority-Owned (MBE)</span>
+                <span class="px-2 py-1 text-xs bg-yellow-500/20 text-yellow-300 rounded-full">Minority-Owned (MBE)</span>
                 {% endif %}
                 {% if vendor.woman_owned %}
                 <span class="px-2 py-1 text-xs bg-pink-100 text-pink-700 rounded-full">Woman-Owned (WBE)</span>
                 {% endif %}
                 {% if vendor.small_business %}
-                <span class="px-2 py-1 text-xs bg-green-100 text-green-700 rounded-full">Small Business (SBE)</span>
+                <span class="px-2 py-1 text-xs bg-green-500/100/20 text-green-300 rounded-full">Small Business (SBE)</span>
                 {% endif %}
                 {% if vendor.local_business %}
-                <span class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-full">Local Business</span>
+                <span class="px-2 py-1 text-xs bg-blue-500/100/20 text-blue-300 rounded-full">Local Business</span>
                 {% endif %}
             </div>
         </div>
@@ -155,22 +160,22 @@
 </div>
 
 <!-- Contracts List -->
-<div class="bg-white rounded-xl shadow-sm p-6">
-    <h2 class="text-lg font-bold text-gray-900 mb-4">Contracts ({{ contracts|length }})</h2>
+<div class="dark-card p-6">
+    <h2 class="text-lg font-bold text-white mb-4">Contracts ({{ contracts|length }})</h2>
     {% if contracts %}
     <div class="space-y-3">
         {% for c in contracts %}
         <a href="{{ url_for('contracts.contract_detail', contract_id=c.contract_id) }}"
-           class="block p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-colors">
+           class="block p-4 rounded-lg border border-slate-700 hover:border-blue-300 hover:bg-blue-500/10 transition-colors">
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                 <div class="flex-1 min-w-0">
                     <div class="flex items-center gap-2 mb-1">
-                        <h3 class="font-semibold text-gray-900 truncate">{{ c.title }}</h3>
+                        <h3 class="font-semibold text-white truncate">{{ c.title }}</h3>
                         {% if c.surtax_category %}
-                        <span class="px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 rounded">Surtax</span>
+                        <span class="px-1.5 py-0.5 text-xs bg-blue-500/100/20 text-blue-300 rounded">Surtax</span>
                         {% endif %}
                     </div>
-                    <div class="flex items-center gap-3 text-sm text-gray-500">
+                    <div class="flex items-center gap-3 text-sm text-slate-400">
                         <span>{{ c.surtax_category or 'General' }}</span>
                         <span>{{ c.status }}</span>
                         {% if c.school_name %}
@@ -180,23 +185,23 @@
                 </div>
                 <div class="flex items-center gap-6">
                     <div class="text-right">
-                        <p class="font-bold text-gray-900">{{ c.current_amount|currency }}</p>
-                        <p class="text-xs text-gray-500">{{ c.total_paid|currency }} spent</p>
+                        <p class="font-bold text-white">{{ c.current_amount|currency }}</p>
+                        <p class="text-xs text-slate-400">{{ c.total_paid|currency }} spent</p>
                     </div>
                     <div class="w-20">
-                        <div class="flex justify-between text-xs text-gray-500 mb-1">
+                        <div class="flex justify-between text-xs text-slate-400 mb-1">
                             <span>{{ c.percent_complete|int }}%</span>
                         </div>
-                        <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class="h-2 rounded-full {% if c.percent_complete >= 75 %}bg-green-500{% elif c.percent_complete >= 50 %}bg-blue-500{% else %}bg-yellow-500{% endif %}"
+                        <div class="w-full bg-slate-700 rounded-full h-2">
+                            <div class="h-2 rounded-full {% if c.percent_complete >= 75 %}bg-green-500/100{% elif c.percent_complete >= 50 %}bg-blue-500/100{% else %}bg-yellow-500{% endif %}"
                                  style="width: {{ c.percent_complete }}%;"></div>
                         </div>
                     </div>
                     <span class="px-2 py-0.5 text-xs rounded-full
-                        {% if c.risk_level == 'Critical' %}bg-red-100 text-red-700
-                        {% elif c.risk_level == 'High' %}bg-orange-100 text-orange-700
-                        {% elif c.risk_level == 'Medium' %}bg-yellow-100 text-yellow-700
-                        {% else %}bg-green-100 text-green-700{% endif %}">
+                        {% if c.risk_level == 'Critical' %}bg-red-500/100/20 text-red-300
+                        {% elif c.risk_level == 'High' %}bg-orange-500/100/20 text-orange-300
+                        {% elif c.risk_level == 'Medium' %}bg-yellow-500/20 text-yellow-300
+                        {% else %}bg-green-500/100/20 text-green-300{% endif %}">
                         {{ c.risk_level }}
                     </span>
                 </div>
@@ -205,7 +210,7 @@
         {% endfor %}
     </div>
     {% else %}
-    <p class="text-gray-500 text-center py-8">No contracts found for this vendor.</p>
+    <p class="text-slate-400 text-center py-8">No contracts found for this vendor.</p>
     {% endif %}
 </div>
 {% endblock %}
