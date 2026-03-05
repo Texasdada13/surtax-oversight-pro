@@ -60,10 +60,10 @@
                 <div class="flex items-center gap-2">
                     <div class="flex-1 bg-slate-700 rounded-full h-2">
                         <div class="h-2 rounded-full
-                            {% if kpi.rating == 'Excellent' %}bg-green-500/100
-                            {% elif kpi.rating == 'Good' %}bg-blue-500/100
+                            {% if kpi.rating == 'Excellent' %}bg-green-500
+                            {% elif kpi.rating == 'Good' %}bg-blue-500
                             {% elif kpi.rating == 'Fair' %}bg-yellow-500
-                            {% else %}bg-red-500/100{% endif %}"
+                            {% else %}bg-red-500{% endif %}"
                             style="width: {{ [kpi.score, 100]|min }}%"></div>
                     </div>
                     <span class="text-xs px-2 py-0.5 rounded-full
@@ -81,7 +81,7 @@
     </div>
     {% endfor %}
 
-    <div class="bg-blue-500/10 border border-blue-200 rounded-xl p-4 text-sm text-blue-300">
+    <div class="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4 text-sm text-blue-300">
         <strong>Source:</strong> Coupa 2025 Total Spend Management Benchmark Report. Benchmarks represent median values across surveyed organizations.
     </div>
 </div>

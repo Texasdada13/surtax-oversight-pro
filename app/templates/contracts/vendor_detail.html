@@ -119,7 +119,7 @@
             </div>
             {% set pct_used = (stats.total_paid / stats.total_value * 100) if stats.total_value else 0 %}
             <div class="w-full bg-slate-700 rounded-full h-2 mt-2">
-                <div class="h-2 rounded-full bg-blue-500/100" style="width: {{ pct_used|round }}%;"></div>
+                <div class="h-2 rounded-full bg-blue-500" style="width: {{ pct_used|round }}%;"></div>
             </div>
             <p class="text-xs text-slate-400">{{ pct_used|round(1) }}% utilized</p>
         </div>
@@ -145,7 +145,7 @@
                 <span class="px-2 py-1 text-xs bg-yellow-500/20 text-yellow-300 rounded-full">Minority-Owned (MBE)</span>
                 {% endif %}
                 {% if vendor.woman_owned %}
-                <span class="px-2 py-1 text-xs bg-pink-100 text-pink-700 rounded-full">Woman-Owned (WBE)</span>
+                <span class="px-2 py-1 text-xs bg-pink-500/20 text-pink-300 rounded-full">Woman-Owned (WBE)</span>
                 {% endif %}
                 {% if vendor.small_business %}
                 <span class="px-2 py-1 text-xs bg-green-500/20 text-green-300 rounded-full">Small Business (SBE)</span>
@@ -193,7 +193,7 @@
                             <span>{{ c.percent_complete|int }}%</span>
                         </div>
                         <div class="w-full bg-slate-700 rounded-full h-2">
-                            <div class="h-2 rounded-full {% if c.percent_complete >= 75 %}bg-green-500/100{% elif c.percent_complete >= 50 %}bg-blue-500/100{% else %}bg-yellow-500{% endif %}"
+                            <div class="h-2 rounded-full {% if c.percent_complete >= 75 %}bg-green-500{% elif c.percent_complete >= 50 %}bg-blue-500{% else %}bg-yellow-500{% endif %}"
                                  style="width: {{ c.percent_complete }}%;"></div>
                         </div>
                     </div>

@@ -181,7 +181,7 @@ def change_orders():
 
 @financials_bp.route('/vendors')
 def vendors():
-    """Vendor financial performance."""
+    """Vendor performance dashboard with KPIs and tiers."""
     db = get_db()
     cursor = db.cursor()
 
@@ -198,8 +198,38 @@ def vendors():
         GROUP BY v.vendor_id
         ORDER BY total_value DESC
     ''')
-    vendors = [dict(row) for row in cursor.fetchall()]
+    vendors_list = [dict(row) for row in cursor.fetchall()]
+
+    # Compute performance tiers
+    for v in vendors_list:
+        health = v.get('avg_health') or 0
+        delayed = v.get('delayed_count') or 0
+        over_budget = v.get('over_budget_count') or 0
+        if health >= 75 and delayed == 0 and over_budget == 0:
+            v['tier'] = 'Excellent'
+        elif health >= 60 and delayed <= 1:
+            v['tier'] = 'Good'
+        elif health >= 40:
+            v['tier'] = 'Fair'
+        else:
+            v['tier'] = 'At Risk'
+
+    # Summary stats
+    active_vendors = [v for v in vendors_list if v.get('contract_count', 0) > 0]
+    vendor_summary = {
+        'total': len(vendors_list),
+        'active': len(active_vendors),
+        'total_value': sum(v.get('total_value', 0) or 0 for v in vendors_list),
+        'avg_health': sum(v.get('avg_health', 0) or 0 for v in active_vendors) / max(len(active_vendors), 1),
+        'excellent': sum(1 for v in vendors_list if v.get('tier') == 'Excellent'),
+        'good': sum(1 for v in vendors_list if v.get('tier') == 'Good'),
+        'fair': sum(1 for v in vendors_list if v.get('tier') == 'Fair'),
+        'at_risk': sum(1 for v in vendors_list if v.get('tier') == 'At Risk'),
+        'with_delays': sum(1 for v in vendors_list if (v.get('delayed_count') or 0) > 0),
+        'with_overruns': sum(1 for v in vendors_list if (v.get('over_budget_count') or 0) > 0),
+    }
 
     return render_template('financials/vendors.html',
-                           title='Vendor Financial Performance',
-                           vendors=vendors)
+                           title='Vendor Performance Dashboard',
+                           vendors=vendors_list,
+                           summary=vendor_summary)

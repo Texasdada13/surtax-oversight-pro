@@ -58,7 +58,7 @@
                 </div>
                 {% set budget_used = (stats.total_spent / stats.total_budget * 100) if stats.total_budget else 0 %}
                 <div class="w-full bg-slate-700 rounded-full h-2.5">
-                    <div class="h-2.5 rounded-full bg-blue-500/100" style="width: {{ budget_used|round }}%;"></div>
+                    <div class="h-2.5 rounded-full bg-blue-500" style="width: {{ budget_used|round }}%;"></div>
                 </div>
                 <p class="text-xs text-slate-400 mt-1">{{ budget_used|round(1) }}% of budget utilized</p>
             </div>
@@ -81,7 +81,7 @@
                     <span class="font-medium text-white">{{ cat.total_budget|currency }} <span class="text-slate-500">({{ cat.project_count }} projects)</span></span>
                 </div>
                 <div class="w-full bg-slate-700 rounded-full h-2">
-                    <div class="h-2 rounded-full bg-blue-500/100" style="width: {{ cat.percent_of_total }}%;"></div>
+                    <div class="h-2 rounded-full bg-blue-500" style="width: {{ cat.percent_of_total }}%;"></div>
                 </div>
             </div>
             {% endfor %}

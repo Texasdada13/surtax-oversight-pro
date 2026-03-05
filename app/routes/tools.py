@@ -16,7 +16,7 @@ def ask():
 
 @tools_bp.route('/meeting')
 def meeting():
-    """Meeting preparation mode with key stats."""
+    """Meeting preparation mode with auto-generated agenda."""
     db = get_db()
     cursor = db.cursor()
 
@@ -53,9 +53,68 @@ def meeting():
     ''')
     actions = [dict(row) for row in cursor.fetchall()]
 
+    # Critical contracts for agenda
+    cursor.execute('''
+        SELECT contract_id, title, vendor_name, current_amount, total_paid,
+               percent_complete, overall_health_score, is_delayed, is_over_budget,
+               surtax_category
+        FROM contracts
+        WHERE is_deleted = 0 AND status = 'Active'
+              AND (overall_health_score < 50 OR is_delayed = 1 OR is_over_budget = 1)
+        ORDER BY overall_health_score ASC LIMIT 10
+    ''')
+    critical_contracts = [dict(row) for row in cursor.fetchall()]
+
+    # Pending change orders
+    cursor.execute('''
+        SELECT co.*, c.title as contract_title
+        FROM change_orders co
+        JOIN contracts c ON co.contract_id = c.contract_id
+        WHERE co.status = 'Pending' AND c.is_deleted = 0
+        ORDER BY co.change_value DESC LIMIT 5
+    ''')
+    pending_changes = [dict(row) for row in cursor.fetchall()]
+
+    # Mark overdue actions
+    from datetime import date
+    today_str = date.today().isoformat()
+    for a in actions:
+        a['overdue'] = bool(a.get('due_date') and a['due_date'] < today_str)
+
+    # Auto-generate agenda items
+    agenda = []
+    agenda.append({'num': 1, 'title': 'Call to Order & Roll Call', 'duration': '5 min', 'type': 'procedural'})
+    agenda.append({'num': 2, 'title': 'Approval of Previous Minutes', 'duration': '5 min', 'type': 'procedural'})
+    agenda.append({'num': 3, 'title': 'Portfolio Status Overview',
+                   'duration': '10 min', 'type': 'report',
+                   'detail': f"{stats.get('active', 0)} active projects, {(stats.get('total_budget', 0) or 0) / 1e6:.1f}M total budget, avg health {stats.get('avg_health', 0) or 0:.0f}"})
+
+    if critical_contracts:
+        agenda.append({'num': 4, 'title': f"Critical Projects Review ({len(critical_contracts)} projects)",
+                       'duration': '15 min', 'type': 'discussion'})
+    if concerns:
+        agenda.append({'num': len(agenda) + 1, 'title': f"Open Concerns ({len(concerns)} items)",
+                       'duration': '10 min', 'type': 'discussion'})
+    if pending_changes:
+        agenda.append({'num': len(agenda) + 1, 'title': f"Change Order Approvals ({len(pending_changes)} pending)",
+                       'duration': '10 min', 'type': 'action'})
+    if actions:
+        overdue = [a for a in actions if a.get('due_date') and a['due_date'] < date.today().isoformat()]
+        agenda.append({'num': len(agenda) + 1, 'title': f"Action Items Review ({len(overdue)} overdue)" if overdue else f"Action Items Review ({len(actions)} open)",
+                       'duration': '10 min', 'type': 'action'})
+
+    agenda.append({'num': len(agenda) + 1, 'title': 'New Business', 'duration': '10 min', 'type': 'discussion'})
+    agenda.append({'num': len(agenda) + 1, 'title': 'Public Comment & Adjournment', 'duration': '5 min', 'type': 'procedural'})
+
+    # Renumber
+    for i, item in enumerate(agenda):
+        item['num'] = i + 1
+
     return render_template('tools/meeting.html',
                            title='Meeting Preparation',
-                           stats=stats, concerns=concerns, actions=actions)
+                           stats=stats, concerns=concerns, actions=actions,
+                           agenda=agenda, critical_contracts=critical_contracts,
+                           pending_changes=pending_changes)
 
 
 @tools_bp.route('/meeting/present')

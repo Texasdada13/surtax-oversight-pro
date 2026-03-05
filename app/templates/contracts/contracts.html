@@ -147,7 +147,7 @@
                         <span>{{ contract.percent_complete|int }}%</span>
                     </div>
                     <div class="w-full bg-slate-700 rounded-full h-2">
-                        <div class="h-2 rounded-full {% if contract.percent_complete >= 75 %}bg-green-500/100{% elif contract.percent_complete >= 50 %}bg-blue-500/100{% elif contract.percent_complete >= 25 %}bg-yellow-500{% else %}bg-gray-400{% endif %}"
+                        <div class="h-2 rounded-full {% if contract.percent_complete >= 75 %}bg-green-500{% elif contract.percent_complete >= 50 %}bg-blue-500{% elif contract.percent_complete >= 25 %}bg-yellow-500{% else %}bg-gray-400{% endif %}"
                              style="width: {{ contract.percent_complete }}%;"></div>
                     </div>
                 </div>

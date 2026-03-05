@@ -56,7 +56,7 @@
                 <span class="font-bold text-blue-400">{{ stats.total_spent|currency_full }}</span>
             </div>
             <div class="w-full bg-slate-700 rounded-full h-3 mt-3">
-                <div class="h-3 rounded-full bg-blue-500/100" style="width: {{ budget_used|round }}%;"></div>
+                <div class="h-3 rounded-full bg-blue-500" style="width: {{ budget_used|round }}%;"></div>
             </div>
             <p class="text-xs text-slate-400 mt-1">{{ budget_used|round(1) }}% of total budget utilized</p>
         </div>
@@ -87,8 +87,8 @@
                 {% set status_pct = (s.count / stats.total_projects * 100) if stats.total_projects else 0 %}
                 <div class="w-full bg-slate-700 rounded-full h-2">
                     <div class="h-2 rounded-full
-                        {% if s.status == 'Active' %}bg-green-500/100
-                        {% elif s.status == 'Completed' %}bg-blue-500/100
+                        {% if s.status == 'Active' %}bg-green-500
+                        {% elif s.status == 'Completed' %}bg-blue-500
                         {% else %}bg-gray-400{% endif %}"
                          style="width: {{ status_pct|round }}%;"></div>
                 </div>
@@ -151,7 +151,7 @@
             <span class="text-xs text-slate-400 w-16 flex-shrink-0">{{ m.month }}</span>
             <div class="flex-1 bg-slate-800 rounded-full h-6 relative">
                 {% set bar_pct = (m.value_started / max_value * 100) if max_value else 0 %}
-                <div class="h-6 rounded-full bg-blue-500/100 flex items-center justify-end px-2"
+                <div class="h-6 rounded-full bg-blue-500 flex items-center justify-end px-2"
                      style="width: {{ bar_pct|round }}%; min-width: 2rem;">
                     <span class="text-xs text-white font-medium">{{ m.contracts_started }}</span>
                 </div>

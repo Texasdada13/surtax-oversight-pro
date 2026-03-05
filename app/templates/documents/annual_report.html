@@ -1,136 +1,179 @@
 {% extends "base.html" %}
+
+{% block page_title %}Annual Report{% endblock %}
+{% block page_subtitle %}Marion County Surtax Oversight — Portfolio Summary{% endblock %}
+
 {% block content %}
 <style>
     main { background: #0f172a !important; }
     main > div { padding: 1.5rem !important; }
     .dark-card { background: #1e293b; border: 1px solid #334155; border-radius: 0.75rem; }
+    @media print {
+        .no-print { display: none !important; }
+        body, main { background: white !important; color: black !important; }
+        .dark-card { background: white !important; border: 1px solid #ddd !important; color: black !important; }
+        .dark-card * { color: black !important; }
+        .print-header { display: block !important; }
+        h1, h2, h3, p, span, td, th { color: black !important; }
+        table { border-collapse: collapse; }
+        th, td { border: 1px solid #ddd !important; }
+        .bg-gradient-to-r { background: #1e40af !important; }
+        .bg-gradient-to-r * { color: white !important; }
+    }
 </style>
-<div class="space-y-6">
-    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl p-8 text-white">
-        <h1 class="text-3xl font-bold">Annual Report</h1>
-        <p class="text-blue-200 mt-1">Marion County Surtax Oversight — Portfolio Summary</p>
-    </div>
 
-    <!-- Portfolio Overview -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="dark-card p-5 text-center">
-            <p class="text-3xl font-bold text-white">{{ stats.total_contracts or 0 }}</p>
-            <p class="text-sm text-slate-400">Total Contracts</p>
-        </div>
-        <div class="dark-card p-5 text-center">
-            <p class="text-3xl font-bold text-green-400">{{ stats.active or 0 }}</p>
-            <p class="text-sm text-slate-400">Active</p>
-        </div>
-        <div class="dark-card p-5 text-center">
-            <p class="text-3xl font-bold text-blue-400">{{ stats.completed or 0 }}</p>
-            <p class="text-sm text-slate-400">Completed</p>
-        </div>
-        <div class="dark-card p-5 text-center">
-            <p class="text-3xl font-bold text-white">{{ (stats.total_current or 0)|currency_short }}</p>
-            <p class="text-sm text-slate-400">Total Budget</p>
-        </div>
+<!-- Header -->
+<div class="flex items-center justify-between mb-6 no-print">
+    <div>
+        <h1 class="text-3xl font-bold text-white">Annual Report</h1>
+        <p class="text-slate-400 mt-1">Marion County Surtax Oversight — Portfolio Summary</p>
     </div>
-
-    <!-- Financial Summary -->
-    <div class="dark-card p-6">
-        <h3 class="text-lg font-semibold text-white mb-4">Financial Summary</h3>
-        <div class="grid grid-cols-3 gap-6">
-            <div>
-                <p class="text-sm text-slate-400">Original Budget</p>
-                <p class="text-xl font-bold">{{ (stats.total_original or 0)|currency_short }}</p>
-            </div>
-            <div>
-                <p class="text-sm text-slate-400">Current Budget</p>
-                <p class="text-xl font-bold">{{ (stats.total_current or 0)|currency_short }}</p>
-            </div>
-            <div>
-                <p class="text-sm text-slate-400">Total Spent</p>
-                <p class="text-xl font-bold text-blue-400">{{ (stats.total_spent or 0)|currency_short }}</p>
-            </div>
-        </div>
-        <div class="mt-4">
-            {% set spend_pct = ((stats.total_spent or 0) / (stats.total_current or 1) * 100) %}
-            <div class="w-full bg-slate-700 rounded-full h-3">
-                <div class="bg-blue-600 h-3 rounded-full" style="width: {{ [spend_pct, 100]|min }}%"></div>
-            </div>
-            <p class="text-xs text-slate-500 mt-1">{{ "%.1f"|format(spend_pct) }}% of budget spent</p>
-        </div>
-    </div>
-
-    <!-- Health & Risk -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="dark-card p-5 text-center">
-            <p class="text-sm text-slate-400">Avg Health Score</p>
-            <p class="text-4xl font-bold {% if (stats.avg_health or 0) >= 70 %}text-green-400{% elif (stats.avg_health or 0) >= 50 %}text-yellow-400{% else %}text-red-400{% endif %}">
-                {{ "%.0f"|format(stats.avg_health or 0) }}
-            </p>
-        </div>
-        <div class="dark-card p-5 text-center">
-            <p class="text-sm text-slate-400">Delayed Projects</p>
-            <p class="text-4xl font-bold text-red-400">{{ stats.delayed or 0 }}</p>
-        </div>
-        <div class="dark-card p-5 text-center">
-            <p class="text-sm text-slate-400">Over Budget</p>
-            <p class="text-4xl font-bold text-orange-400">{{ stats.over_budget or 0 }}</p>
-        </div>
-    </div>
-
-    <!-- By Category -->
-    {% if categories %}
-    <div class="dark-card">
-        <div class="p-5 border-b"><h3 class="font-semibold text-white">Spending by Category</h3></div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead class="bg-slate-800/50">
-                    <tr>
-                        <th class="px-4 py-3 text-left font-medium text-slate-400">Category</th>
-                        <th class="px-4 py-3 text-center font-medium text-slate-400">Projects</th>
-                        <th class="px-4 py-3 text-right font-medium text-slate-400">Budget</th>
-                        <th class="px-4 py-3 text-right font-medium text-slate-400">Spent</th>
-                        <th class="px-4 py-3 text-center font-medium text-slate-400">Avg Health</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-800">
-                    {% for c in categories %}
-                    <tr>
-                        <td class="px-4 py-3 font-medium">{{ c.surtax_category }}</td>
-                        <td class="px-4 py-3 text-center">{{ c.count }}</td>
-                        <td class="px-4 py-3 text-right">{{ (c.budget or 0)|currency_short }}</td>
-                        <td class="px-4 py-3 text-right">{{ (c.spent or 0)|currency_short }}</td>
-                        <td class="px-4 py-3 text-center">{{ "%.0f"|format(c.avg_health or 0) }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-    {% endif %}
-
-    <!-- Top Vendors -->
-    {% if top_vendors %}
-    <div class="dark-card">
-        <div class="p-5 border-b"><h3 class="font-semibold text-white">Top 10 Vendors by Value</h3></div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead class="bg-slate-800/50">
-                    <tr>
-                        <th class="px-4 py-3 text-left font-medium text-slate-400">Vendor</th>
-                        <th class="px-4 py-3 text-center font-medium text-slate-400">Contracts</th>
-                        <th class="px-4 py-3 text-right font-medium text-slate-400">Total Value</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-800">
-                    {% for v in top_vendors %}
-                    <tr>
-                        <td class="px-4 py-3 font-medium">{{ v.vendor_name }}</td>
-                        <td class="px-4 py-3 text-center">{{ v.contracts }}</td>
-                        <td class="px-4 py-3 text-right">{{ (v.total_value or 0)|currency_short }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-    {% endif %}
+    <button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+        Print Report
+    </button>
 </div>
+
+<!-- Print-only header -->
+<div class="print-header hidden mb-6">
+    <h1 class="text-2xl font-bold">Marion County Surtax Oversight — Annual Report</h1>
+    <p class="text-sm text-gray-600">Generated {{ "now"|string }}</p>
+</div>
+
+<!-- Banner -->
+<div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl p-8 text-white mb-6">
+    <h2 class="text-2xl font-bold">Portfolio Overview</h2>
+    <p class="text-blue-200 mt-1">{{ stats.total_contracts or 0 }} contracts &bull; {{ (stats.total_current or 0)|currency_short }} total budget &bull; {{ stats.active or 0 }} active</p>
+</div>
+
+<!-- Portfolio KPIs -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+    <div class="dark-card p-5 text-center">
+        <p class="text-3xl font-bold text-white">{{ stats.total_contracts or 0 }}</p>
+        <p class="text-sm text-slate-400">Total Contracts</p>
+    </div>
+    <div class="dark-card p-5 text-center">
+        <p class="text-3xl font-bold text-green-400">{{ stats.active or 0 }}</p>
+        <p class="text-sm text-slate-400">Active</p>
+    </div>
+    <div class="dark-card p-5 text-center">
+        <p class="text-3xl font-bold text-blue-400">{{ stats.completed or 0 }}</p>
+        <p class="text-sm text-slate-400">Completed</p>
+    </div>
+    <div class="dark-card p-5 text-center">
+        <p class="text-3xl font-bold text-white">{{ (stats.total_current or 0)|currency_short }}</p>
+        <p class="text-sm text-slate-400">Total Budget</p>
+    </div>
+</div>
+
+<!-- Financial Summary -->
+<div class="dark-card p-6 mb-6">
+    <h3 class="text-lg font-semibold text-white mb-4">Financial Summary</h3>
+    <div class="grid grid-cols-3 gap-6">
+        <div>
+            <p class="text-sm text-slate-400">Original Budget</p>
+            <p class="text-xl font-bold text-white">{{ (stats.total_original or 0)|currency_short }}</p>
+        </div>
+        <div>
+            <p class="text-sm text-slate-400">Current Budget</p>
+            <p class="text-xl font-bold text-white">{{ (stats.total_current or 0)|currency_short }}</p>
+        </div>
+        <div>
+            <p class="text-sm text-slate-400">Total Spent</p>
+            <p class="text-xl font-bold text-blue-400">{{ (stats.total_spent or 0)|currency_short }}</p>
+        </div>
+    </div>
+    <div class="mt-4">
+        {% set spend_pct = ((stats.total_spent or 0) / (stats.total_current or 1) * 100) %}
+        <div class="w-full bg-slate-700 rounded-full h-3">
+            <div class="bg-blue-600 h-3 rounded-full" style="width: {{ [spend_pct, 100]|min }}%"></div>
+        </div>
+        <p class="text-xs text-slate-500 mt-1">{{ "%.1f"|format(spend_pct) }}% of budget spent</p>
+    </div>
+</div>
+
+<!-- Health & Risk -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="dark-card p-5 text-center">
+        <p class="text-sm text-slate-400">Avg Health Score</p>
+        <p class="text-4xl font-bold {% if (stats.avg_health or 0) >= 70 %}text-green-400{% elif (stats.avg_health or 0) >= 50 %}text-yellow-400{% else %}text-red-400{% endif %}">
+            {{ "%.0f"|format(stats.avg_health or 0) }}
+        </p>
+    </div>
+    <div class="dark-card p-5 text-center">
+        <p class="text-sm text-slate-400">Delayed Projects</p>
+        <p class="text-4xl font-bold {% if (stats.delayed or 0) > 0 %}text-red-400{% else %}text-green-400{% endif %}">{{ stats.delayed or 0 }}</p>
+    </div>
+    <div class="dark-card p-5 text-center">
+        <p class="text-sm text-slate-400">Over Budget</p>
+        <p class="text-4xl font-bold {% if (stats.over_budget or 0) > 0 %}text-orange-400{% else %}text-green-400{% endif %}">{{ stats.over_budget or 0 }}</p>
+    </div>
+</div>
+
+<!-- By Category -->
+{% if categories %}
+<div class="dark-card mb-6">
+    <div class="p-5 border-b border-slate-700"><h3 class="font-semibold text-white">Spending by Category</h3></div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="bg-slate-800/50">
+                <tr>
+                    <th class="px-4 py-3 text-left font-medium text-slate-400">Category</th>
+                    <th class="px-4 py-3 text-center font-medium text-slate-400">Projects</th>
+                    <th class="px-4 py-3 text-right font-medium text-slate-400">Budget</th>
+                    <th class="px-4 py-3 text-right font-medium text-slate-400">Spent</th>
+                    <th class="px-4 py-3 text-center font-medium text-slate-400">Utilization</th>
+                    <th class="px-4 py-3 text-center font-medium text-slate-400">Avg Health</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800">
+                {% for c in categories %}
+                <tr class="hover:bg-slate-800/50">
+                    <td class="px-4 py-3 font-medium text-white">{{ c.surtax_category }}</td>
+                    <td class="px-4 py-3 text-center text-slate-300">{{ c.count }}</td>
+                    <td class="px-4 py-3 text-right text-slate-300">{{ (c.budget or 0)|currency_short }}</td>
+                    <td class="px-4 py-3 text-right text-slate-300">{{ (c.spent or 0)|currency_short }}</td>
+                    <td class="px-4 py-3 text-center">
+                        {% set cat_pct = ((c.spent or 0) / (c.budget or 1) * 100) %}
+                        <span class="{% if cat_pct > 90 %}text-red-400{% elif cat_pct > 70 %}text-yellow-400{% else %}text-green-400{% endif %}">{{ "%.0f"|format(cat_pct) }}%</span>
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                        <span class="{% if (c.avg_health or 0) >= 70 %}text-green-400{% elif (c.avg_health or 0) >= 50 %}text-yellow-400{% else %}text-red-400{% endif %}">{{ "%.0f"|format(c.avg_health or 0) }}</span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- Top Vendors -->
+{% if top_vendors %}
+<div class="dark-card mb-6">
+    <div class="p-5 border-b border-slate-700"><h3 class="font-semibold text-white">Top 10 Vendors by Value</h3></div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="bg-slate-800/50">
+                <tr>
+                    <th class="px-4 py-3 text-left font-medium text-slate-400">#</th>
+                    <th class="px-4 py-3 text-left font-medium text-slate-400">Vendor</th>
+                    <th class="px-4 py-3 text-center font-medium text-slate-400">Contracts</th>
+                    <th class="px-4 py-3 text-right font-medium text-slate-400">Total Value</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800">
+                {% for v in top_vendors %}
+                <tr class="hover:bg-slate-800/50">
+                    <td class="px-4 py-3 text-slate-500">{{ loop.index }}</td>
+                    <td class="px-4 py-3 font-medium text-white">{{ v.vendor_name }}</td>
+                    <td class="px-4 py-3 text-center text-slate-300">{{ v.contracts }}</td>
+                    <td class="px-4 py-3 text-right text-slate-300">{{ (v.total_value or 0)|currency_short }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
 {% endblock %}
