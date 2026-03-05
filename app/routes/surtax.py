@@ -272,6 +272,65 @@ def school_detail(school_name):
                           stats=stats)
 
 
+@surtax_bp.route('/capital-projects')
+def capital_projects():
+    """Capital projects overview grouped by category."""
+    from app.database import get_db
+
+    db = get_db()
+    cursor = db.cursor()
+
+    # Overall capital stats
+    cursor.execute('''
+        SELECT
+            COUNT(*) as total,
+            SUM(CASE WHEN status = 'Active' THEN 1 ELSE 0 END) as active,
+            SUM(CASE WHEN status = 'Complete' THEN 1 ELSE 0 END) as completed,
+            SUM(current_amount) as total_budget,
+            SUM(total_paid) as total_spent,
+            AVG(percent_complete) as avg_progress,
+            AVG(overall_health_score) as avg_health,
+            SUM(CASE WHEN is_delayed = 1 THEN 1 ELSE 0 END) as delayed,
+            SUM(CASE WHEN is_over_budget = 1 THEN 1 ELSE 0 END) as over_budget
+        FROM contracts WHERE is_deleted = 0 AND surtax_category IS NOT NULL
+    ''')
+    stats = dict(cursor.fetchone())
+
+    # By category with detail
+    cursor.execute('''
+        SELECT surtax_category,
+               COUNT(*) as count,
+               SUM(CASE WHEN status = 'Active' THEN 1 ELSE 0 END) as active,
+               SUM(CASE WHEN status = 'Complete' THEN 1 ELSE 0 END) as completed,
+               SUM(current_amount) as budget,
+               SUM(total_paid) as spent,
+               AVG(percent_complete) as avg_progress,
+               AVG(overall_health_score) as avg_health,
+               SUM(CASE WHEN is_delayed = 1 THEN 1 ELSE 0 END) as delayed,
+               SUM(CASE WHEN is_over_budget = 1 THEN 1 ELSE 0 END) as over_budget
+        FROM contracts WHERE is_deleted = 0 AND surtax_category IS NOT NULL
+        GROUP BY surtax_category ORDER BY budget DESC
+    ''')
+    categories = [dict(row) for row in cursor.fetchall()]
+
+    # All capital projects for the table
+    cursor.execute('''
+        SELECT contract_id, title, school_name, surtax_category, vendor_name,
+               current_amount, total_paid, percent_complete, status,
+               is_delayed, is_over_budget, overall_health_score, risk_level
+        FROM contracts
+        WHERE is_deleted = 0 AND surtax_category IS NOT NULL
+        ORDER BY current_amount DESC
+    ''')
+    projects = [dict(row) for row in cursor.fetchall()]
+
+    return render_template('surtax/capital_projects.html',
+                          title='Capital Projects',
+                          stats=stats,
+                          categories=categories,
+                          projects=projects)
+
+
 @surtax_bp.route('/concerns')
 def concerns():
     """Concerns dashboard - delayed and over-budget projects."""

@@ -91,6 +91,23 @@ def analytics():
     over_budget = [c for c in contracts if c['analytics']['forecast_at_completion'] > (c.get('current_amount', 0) or 0)]
     over_budget.sort(key=lambda x: x['analytics']['forecast_at_completion'] - (x.get('current_amount', 0) or 0), reverse=True)
 
+    # Risk distribution
+    risk_dist = {'High': 0, 'Medium': 0, 'Low': 0}
+    for c in contracts:
+        cat = c['analytics'].get('risk_category', 'Low')
+        risk_dist[cat] = risk_dist.get(cat, 0) + 1
+
+    # Portfolio health by category
+    cursor.execute('''
+        SELECT surtax_category, COUNT(*) as count,
+               AVG(overall_health_score) as avg_health,
+               SUM(current_amount) as budget
+        FROM contracts
+        WHERE is_deleted = 0 AND status = 'Active' AND surtax_category IS NOT NULL
+        GROUP BY surtax_category ORDER BY budget DESC
+    ''')
+    category_health = [dict(row) for row in cursor.fetchall()]
+
     return render_template('financials/analytics.html',
                            title='Executive Analytics',
                            contracts=contracts,
@@ -98,7 +115,9 @@ def analytics():
                            total_budget=total_budget,
                            total_forecast=total_forecast,
                            forecast_variance=forecast_variance,
-                           over_budget=over_budget[:10])
+                           over_budget=over_budget[:10],
+                           risk_dist=risk_dist,
+                           category_health=category_health)
 
 
 @financials_bp.route('/benchmarking')

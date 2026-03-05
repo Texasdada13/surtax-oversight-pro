@@ -63,6 +63,7 @@ NAVIGATION = {
         'default_collapsed': True,
         'items': [
             {'id': 'surtax_projects', 'label': 'Projects', 'path': '/surtax/projects', 'icon': 'folder', 'visible_to': ['committee']},
+            {'id': 'surtax_capital', 'label': 'Capital Projects', 'path': '/surtax/capital-projects', 'icon': 'building', 'visible_to': ['committee']},
             {'id': 'surtax_schools', 'label': 'Schools', 'path': '/surtax/schools', 'icon': 'school', 'visible_to': ['committee']},
             {'id': 'monitoring_watchlist', 'label': 'Watchlist', 'path': '/monitoring/watchlist', 'icon': 'star', 'visible_to': ['committee']},
             {'id': 'financials_home', 'label': 'Financials', 'path': '/financials/', 'icon': 'dollarSign', 'visible_to': ['committee']},
@@ -89,6 +90,7 @@ NAVIGATION = {
         'items': [
             {'id': 'surtax_overview', 'label': 'Overview', 'path': '/surtax/', 'icon': 'home', 'visible_to': ['staff']},
             {'id': 'surtax_projects', 'label': 'Projects', 'path': '/surtax/projects', 'icon': 'folder', 'visible_to': ['staff']},
+            {'id': 'surtax_capital', 'label': 'Capital Projects', 'path': '/surtax/capital-projects', 'icon': 'building', 'visible_to': ['staff']},
             {'id': 'surtax_schools', 'label': 'Schools', 'path': '/surtax/schools', 'icon': 'school', 'visible_to': ['staff']},
             {'id': 'ask_ai', 'label': 'Ask AI', 'path': '/tools/ask', 'icon': 'chat', 'visible_to': ['staff']}
         ]
