@@ -1,59 +1,71 @@
 {% extends "base.html" %}
-{% block content %}
-<div class="space-y-6">
-    <div class="flex items-center justify-between">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-900">Watchlist</h1>
-            <p class="text-gray-500">Contracts requiring attention — delayed, over budget, or low health score</p>
-        </div>
-        <span class="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm font-medium">{{ total }} items</span>
-    </div>
 
-    <div class="space-y-3">
-        {% for c in contracts %}
-        <div class="bg-white rounded-xl shadow-sm border p-5 hover:shadow-md transition-shadow
-            {% if c.risk_level == 'Critical' %}border-l-4 border-l-red-500
-            {% elif c.risk_level == 'High' %}border-l-4 border-l-orange-500
-            {% else %}border-l-4 border-l-yellow-400{% endif %}">
-            <div class="flex items-start justify-between">
-                <div class="flex-1">
-                    <div class="flex items-center gap-3">
-                        <a href="{{ url_for('contracts.contract_detail', contract_id=c.contract_id) }}" class="text-lg font-semibold text-blue-600 hover:underline">{{ c.title }}</a>
-                        <span class="px-2 py-0.5 text-xs rounded-full
-                            {% if c.risk_level == 'Critical' %}bg-red-100 text-red-700
-                            {% elif c.risk_level == 'High' %}bg-orange-100 text-orange-700
-                            {% elif c.risk_level == 'Medium' %}bg-yellow-100 text-yellow-700
-                            {% else %}bg-green-100 text-green-700{% endif %}">{{ c.risk_level }}</span>
-                    </div>
-                    <p class="text-sm text-gray-500 mt-1">{{ c.vendor_name or 'No vendor' }} &bull; {{ c.contract_id }}</p>
-                    <div class="flex gap-4 mt-2 text-sm">
-                        {% if c.is_delayed %}
-                        <span class="text-red-600">Delayed {{ c.delay_days or 0 }} days</span>
-                        {% endif %}
-                        {% if c.is_over_budget %}
-                        <span class="text-orange-600">Over budget {{ "%.1f"|format(c.budget_variance_pct or 0) }}%</span>
-                        {% endif %}
-                        <span class="text-gray-500">Health: {{ c.overall_health_score|round|int }}/100</span>
-                        <span class="text-gray-500">Budget: {{ (c.current_amount or 0)|currency_short }}</span>
-                    </div>
+{% block page_title %}Watchlist{% endblock %}
+{% block page_subtitle %}Contracts requiring attention{% endblock %}
+
+{% block content %}
+<style>
+    main { background: #0f172a !important; }
+    main > div { padding: 1.5rem !important; }
+    .dark-card { background: #1e293b; border: 1px solid #334155; border-radius: 0.75rem; }
+    .watch-card {
+        background: #1e293b; border: 1px solid #334155; border-radius: 0.75rem;
+        padding: 1.25rem; transition: all 0.15s ease;
+    }
+    .watch-card:hover { background: #243044; border-color: #475569; }
+</style>
+
+<!-- Header -->
+<div class="flex items-center justify-between mb-6">
+    <div>
+        <h1 class="text-3xl font-bold text-white">Watchlist</h1>
+        <p class="text-slate-400 mt-1">Contracts requiring attention — delayed, over budget, or low health score</p>
+    </div>
+    <span class="px-3 py-1 bg-orange-500/20 text-orange-300 rounded-full text-sm font-medium">{{ total }} items</span>
+</div>
+
+<div class="space-y-3">
+    {% for c in contracts %}
+    <div class="watch-card" style="border-left: 4px solid {% if c.risk_level == 'Critical' %}#ef4444{% elif c.risk_level == 'High' %}#f97316{% else %}#eab308{% endif %};">
+        <div class="flex items-start justify-between">
+            <div class="flex-1">
+                <div class="flex items-center gap-3 flex-wrap">
+                    <a href="{% if c.surtax_category %}{{ url_for('surtax.project_detail', contract_id=c.contract_id) }}{% else %}{{ url_for('contracts.contract_detail', contract_id=c.contract_id) }}{% endif %}"
+                       class="text-base font-semibold text-blue-400 hover:text-blue-300">{{ c.title }}</a>
+                    <span class="px-2 py-0.5 text-xs rounded-full font-medium
+                        {% if c.risk_level == 'Critical' %}bg-red-500/20 text-red-300
+                        {% elif c.risk_level == 'High' %}bg-orange-500/20 text-orange-300
+                        {% elif c.risk_level == 'Medium' %}bg-yellow-500/20 text-yellow-300
+                        {% else %}bg-green-500/20 text-green-300{% endif %}">{{ c.risk_level }}</span>
                 </div>
-                <div class="text-right">
-                    <div class="inline-flex items-center justify-center w-12 h-12 rounded-full text-lg font-bold
-                        {% if c.overall_health_score >= 70 %}bg-green-100 text-green-700
-                        {% elif c.overall_health_score >= 50 %}bg-yellow-100 text-yellow-700
-                        {% else %}bg-red-100 text-red-700{% endif %}">
-                        {{ c.overall_health_score|round|int }}
-                    </div>
+                <p class="text-sm text-slate-500 mt-1">{{ c.vendor_name or 'No vendor' }} &bull; {{ c.contract_id }}</p>
+                <div class="flex gap-4 mt-2 text-sm flex-wrap">
+                    {% if c.is_delayed %}
+                    <span class="text-red-400">Delayed {{ c.delay_days or 0 }} days</span>
+                    {% endif %}
+                    {% if c.is_over_budget %}
+                    <span class="text-orange-400">Over budget {{ "%.1f"|format(c.budget_variance_pct or 0) }}%</span>
+                    {% endif %}
+                    <span class="text-slate-500">Health: {{ c.overall_health_score|round|int }}/100</span>
+                    <span class="text-slate-500">Budget: {{ (c.current_amount or 0)|currency_short }}</span>
+                </div>
+            </div>
+            <div class="text-right ml-4">
+                <div class="inline-flex items-center justify-center w-12 h-12 rounded-full text-lg font-bold
+                    {% if c.overall_health_score >= 70 %}bg-green-500/20 text-green-400
+                    {% elif c.overall_health_score >= 50 %}bg-yellow-500/20 text-yellow-400
+                    {% else %}bg-red-500/20 text-red-400{% endif %}">
+                    {{ c.overall_health_score|round|int }}
                 </div>
             </div>
         </div>
-        {% endfor %}
-        {% if not contracts %}
-        <div class="bg-white rounded-xl shadow-sm border p-12 text-center text-gray-400">
-            <p class="text-lg">No contracts on watchlist</p>
-            <p class="text-sm mt-1">All contracts are performing within acceptable parameters</p>
-        </div>
-        {% endif %}
     </div>
+    {% endfor %}
+    {% if not contracts %}
+    <div class="dark-card p-12 text-center">
+        <p class="text-slate-400 text-lg">No contracts on watchlist</p>
+        <p class="text-slate-500 text-sm mt-1">All contracts are performing within acceptable parameters</p>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
