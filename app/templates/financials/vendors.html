@@ -1,19 +1,62 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-    <div class="flex items-center gap-4 mb-6">
-        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-            </svg>
-        </div>
-        <div>
-            <h2 class="text-2xl font-bold text-gray-900">Vendor Financials</h2>
-            <p class="text-gray-500">This page will be populated with real data in the next phase.</p>
-        </div>
+<div class="space-y-6">
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900">Vendor Financial Performance</h1>
+        <p class="text-gray-500">Financial health and performance metrics by vendor</p>
     </div>
-    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <p class="text-sm text-blue-800">Coming soon — this page is part of the Surtax Oversight Pro consolidated dashboard.</p>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {% for v in vendors %}
+        <div class="bg-white rounded-xl shadow-sm border p-5 hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between mb-3">
+                <div>
+                    <h3 class="font-semibold text-gray-900">{{ v.name }}</h3>
+                    <p class="text-sm text-gray-500">{{ v.contract_count or 0 }} contract{{ 's' if (v.contract_count or 0) != 1 }}</p>
+                </div>
+                {% if v.avg_health %}
+                <span class="inline-flex items-center justify-center w-10 h-10 rounded-full text-sm font-bold
+                    {% if v.avg_health >= 70 %}bg-green-100 text-green-700
+                    {% elif v.avg_health >= 50 %}bg-yellow-100 text-yellow-700
+                    {% else %}bg-red-100 text-red-700{% endif %}">
+                    {{ v.avg_health|round|int }}
+                </span>
+                {% endif %}
+            </div>
+            <div class="space-y-2 text-sm">
+                <div class="flex justify-between">
+                    <span class="text-gray-500">Total Value</span>
+                    <span class="font-medium">{{ (v.total_value or 0)|currency_short }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-500">Total Paid</span>
+                    <span class="font-medium">{{ (v.total_paid or 0)|currency_short }}</span>
+                </div>
+                {% if v.total_value and v.total_paid %}
+                <div class="w-full bg-gray-200 rounded-full h-1.5">
+                    {% set pct = ((v.total_paid or 0) / (v.total_value or 1) * 100) %}
+                    <div class="bg-blue-500 h-1.5 rounded-full" style="width: {{ [pct, 100]|min }}%"></div>
+                </div>
+                {% endif %}
+                <div class="flex gap-3 pt-1">
+                    {% if v.delayed_count %}
+                    <span class="text-red-600 text-xs">{{ v.delayed_count }} delayed</span>
+                    {% endif %}
+                    {% if v.over_budget_count %}
+                    <span class="text-orange-600 text-xs">{{ v.over_budget_count }} over budget</span>
+                    {% endif %}
+                    {% if not v.delayed_count and not v.over_budget_count %}
+                    <span class="text-green-600 text-xs">On track</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% if not vendors %}
+        <div class="col-span-full bg-white rounded-xl shadow-sm border p-12 text-center text-gray-400">
+            No vendor data available
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

@@ -1,19 +1,121 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-    <div class="flex items-center gap-4 mb-6">
-        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-            </svg>
+<div class="space-y-6">
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900">Executive Analytics</h1>
+        <p class="text-gray-500">Earned Value Management forecasting and predictive analytics</p>
+    </div>
+
+    <!-- Executive Summary -->
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl p-6 text-white">
+        <h3 class="text-sm font-medium text-blue-200 mb-2">Executive Summary</h3>
+        <p class="text-lg">{{ exec_summary }}</p>
+    </div>
+
+    <!-- Forecast KPIs -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white rounded-xl shadow-sm border p-5">
+            <p class="text-sm text-gray-500">Total Budget (BAC)</p>
+            <p class="text-2xl font-bold text-gray-900">{{ total_budget|currency_short }}</p>
         </div>
-        <div>
-            <h2 class="text-2xl font-bold text-gray-900">Financial Analytics</h2>
-            <p class="text-gray-500">This page will be populated with real data in the next phase.</p>
+        <div class="bg-white rounded-xl shadow-sm border p-5">
+            <p class="text-sm text-gray-500">Forecast at Completion (EAC)</p>
+            <p class="text-2xl font-bold {% if total_forecast > total_budget %}text-red-600{% else %}text-green-600{% endif %}">
+                {{ total_forecast|currency_short }}
+            </p>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm border p-5">
+            <p class="text-sm text-gray-500">Forecast Variance</p>
+            <p class="text-2xl font-bold {% if forecast_variance > 0 %}text-red-600{% else %}text-green-600{% endif %}">
+                {{ forecast_variance|currency_short }}
+            </p>
+            {% if total_budget > 0 %}
+            <p class="text-xs text-gray-400">{{ "%.1f"|format(forecast_variance / total_budget * 100) }}%</p>
+            {% endif %}
         </div>
     </div>
-    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <p class="text-sm text-blue-800">Coming soon — this page is part of the Surtax Oversight Pro consolidated dashboard.</p>
+
+    <!-- Over Budget Forecasts -->
+    {% if over_budget %}
+    <div class="bg-white rounded-xl shadow-sm border">
+        <div class="p-5 border-b">
+            <h3 class="font-semibold text-gray-900">Contracts Forecasted Over Budget</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left font-medium text-gray-600">Contract</th>
+                        <th class="px-4 py-3 text-right font-medium text-gray-600">Budget</th>
+                        <th class="px-4 py-3 text-right font-medium text-gray-600">Spent</th>
+                        <th class="px-4 py-3 text-right font-medium text-gray-600">Forecast (EAC)</th>
+                        <th class="px-4 py-3 text-right font-medium text-gray-600">Overrun</th>
+                        <th class="px-4 py-3 text-center font-medium text-gray-600">CPI</th>
+                        <th class="px-4 py-3 text-center font-medium text-gray-600">Progress</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y">
+                    {% for c in over_budget %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-3">
+                            <a href="{{ url_for('contracts.contract_detail', contract_id=c.contract_id) }}" class="text-blue-600 hover:underline">{{ c.title|truncate(35) }}</a>
+                        </td>
+                        <td class="px-4 py-3 text-right">{{ (c.current_amount or 0)|currency_short }}</td>
+                        <td class="px-4 py-3 text-right">{{ (c.total_paid or 0)|currency_short }}</td>
+                        <td class="px-4 py-3 text-right text-red-600 font-medium">{{ c.analytics.forecast_at_completion|currency_short }}</td>
+                        <td class="px-4 py-3 text-right text-red-600">
+                            {{ (c.analytics.forecast_at_completion - (c.current_amount or 0))|currency_short }}
+                        </td>
+                        <td class="px-4 py-3 text-center">{{ c.analytics.cost_performance_index }}</td>
+                        <td class="px-4 py-3 text-center">{{ c.percent_complete or 0 }}%</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- All Active Contracts Analytics -->
+    <div class="bg-white rounded-xl shadow-sm border">
+        <div class="p-5 border-b">
+            <h3 class="font-semibold text-gray-900">Active Contract Analytics</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left font-medium text-gray-600">Contract</th>
+                        <th class="px-4 py-3 text-right font-medium text-gray-600">Burn Rate/mo</th>
+                        <th class="px-4 py-3 text-right font-medium text-gray-600">Forecast</th>
+                        <th class="px-4 py-3 text-center font-medium text-gray-600">CPI</th>
+                        <th class="px-4 py-3 text-center font-medium text-gray-600">Risk</th>
+                        <th class="px-4 py-3 text-left font-medium text-gray-600">Est. Completion</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y">
+                    {% for c in contracts[:20] %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-3">
+                            <a href="{{ url_for('contracts.contract_detail', contract_id=c.contract_id) }}" class="text-blue-600 hover:underline">{{ c.title|truncate(35) }}</a>
+                        </td>
+                        <td class="px-4 py-3 text-right">{{ c.analytics.burn_rate_monthly|currency_short }}</td>
+                        <td class="px-4 py-3 text-right">{{ c.analytics.forecast_at_completion|currency_short }}</td>
+                        <td class="px-4 py-3 text-center">{{ c.analytics.cost_performance_index }}</td>
+                        <td class="px-4 py-3 text-center">
+                            <span class="px-2 py-0.5 text-xs rounded-full
+                                {% if c.analytics.risk_category == 'High' %}bg-red-100 text-red-700
+                                {% elif c.analytics.risk_category == 'Medium' %}bg-yellow-100 text-yellow-700
+                                {% else %}bg-green-100 text-green-700{% endif %}">
+                                {{ c.analytics.risk_category }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 text-gray-600">{{ c.analytics.expected_completion_date or 'N/A' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 {% endblock %}

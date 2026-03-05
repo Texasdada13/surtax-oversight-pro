@@ -1,19 +1,70 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-    <div class="flex items-center gap-4 mb-6">
-        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-            </svg>
-        </div>
+<div class="space-y-6">
+    <div class="flex items-center justify-between">
         <div>
-            <h2 class="text-2xl font-bold text-gray-900">Audit Trail</h2>
-            <p class="text-gray-500">This page will be populated with real data in the next phase.</p>
+            <h1 class="text-2xl font-bold text-gray-900">Audit Trail</h1>
+            <p class="text-gray-500">Complete history of system actions and changes</p>
         </div>
+        <span class="px-3 py-1 bg-gray-100 rounded-full text-sm">{{ total }} entries</span>
     </div>
-    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <p class="text-sm text-blue-800">Coming soon — this page is part of the Surtax Oversight Pro consolidated dashboard.</p>
+
+    <div class="bg-white rounded-xl shadow-sm border">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left font-medium text-gray-600">Date/Time</th>
+                        <th class="px-4 py-3 text-left font-medium text-gray-600">Action</th>
+                        <th class="px-4 py-3 text-left font-medium text-gray-600">Contract</th>
+                        <th class="px-4 py-3 text-left font-medium text-gray-600">User</th>
+                        <th class="px-4 py-3 text-left font-medium text-gray-600">Details</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y">
+                    {% for log in logs %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-3 text-gray-500 whitespace-nowrap">{{ log.changed_at|date }}</td>
+                        <td class="px-4 py-3">
+                            <span class="px-2 py-0.5 text-xs rounded-full
+                                {% if log.action == 'CREATE' %}bg-green-100 text-green-700
+                                {% elif log.action == 'UPDATE' %}bg-blue-100 text-blue-700
+                                {% elif log.action == 'DELETE' %}bg-red-100 text-red-700
+                                {% else %}bg-gray-100 text-gray-700{% endif %}">
+                                {{ log.action or 'UNKNOWN' }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3">
+                            {% if log.contract_title %}
+                            <a href="{{ url_for('contracts.contract_detail', contract_id=log.record_id) }}" class="text-blue-600 hover:underline">{{ log.contract_title|truncate(30) }}</a>
+                            {% elif log.table_name == 'contracts' %}
+                            <span class="text-gray-500">{{ log.record_id }}</span>
+                            {% else %}
+                            <span class="text-gray-400">{{ log.table_name }}: {{ log.record_id }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3 text-gray-600">{{ log.changed_by or 'System' }}</td>
+                        <td class="px-4 py-3 text-gray-500 max-w-xs truncate">{{ log.field_name or '' }}{% if log.old_value %}: {{ log.old_value }} → {{ log.new_value }}{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                    {% if not logs %}
+                    <tr><td colspan="5" class="px-4 py-8 text-center text-gray-400">No audit log entries</td></tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if total_pages > 1 %}
+        <div class="flex justify-center gap-2 p-4 border-t">
+            {% if page > 1 %}
+            <a href="?page={{ page - 1 }}" class="px-3 py-1 text-sm bg-gray-100 rounded hover:bg-gray-200">Prev</a>
+            {% endif %}
+            <span class="px-3 py-1 text-sm text-gray-500">Page {{ page }} of {{ total_pages }}</span>
+            {% if page < total_pages %}
+            <a href="?page={{ page + 1 }}" class="px-3 py-1 text-sm bg-gray-100 rounded hover:bg-gray-200">Next</a>
+            {% endif %}
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

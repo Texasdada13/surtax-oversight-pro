@@ -1,19 +1,83 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-    <div class="flex items-center gap-4 mb-6">
-        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-            </svg>
-        </div>
-        <div>
-            <h2 class="text-2xl font-bold text-gray-900">Benchmarking</h2>
-            <p class="text-gray-500">This page will be populated with real data in the next phase.</p>
+<div class="space-y-6">
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900">Procurement Benchmarking</h1>
+        <p class="text-gray-500">Performance compared to Coupa 2025 Total Spend Management benchmarks</p>
+    </div>
+
+    <!-- Overall Health Score -->
+    <div class="bg-white rounded-xl shadow-sm border p-6">
+        <div class="flex items-center gap-6">
+            <div class="w-24 h-24 rounded-full flex items-center justify-center text-3xl font-bold
+                {% if health.grade == 'A' %}bg-green-100 text-green-700
+                {% elif health.grade == 'B' %}bg-blue-100 text-blue-700
+                {% elif health.grade == 'C' %}bg-yellow-100 text-yellow-700
+                {% else %}bg-red-100 text-red-700{% endif %}">
+                {{ health.grade }}
+            </div>
+            <div>
+                <h3 class="text-xl font-semibold text-gray-900">Overall Score: {{ health.overall_score }}/100</h3>
+                <p class="text-gray-500">Rating: {{ health.rating }} &bull; {{ health.total_kpis }} KPIs evaluated</p>
+                {% if health.strengths %}
+                <p class="text-sm text-green-600 mt-1">Strengths: {{ health.strengths|join(', ') }}</p>
+                {% endif %}
+                {% if health.improvements %}
+                <p class="text-sm text-red-600 mt-1">Needs Improvement: {{ health.improvements|join(', ') }}</p>
+                {% endif %}
+            </div>
         </div>
     </div>
-    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <p class="text-sm text-blue-800">Coming soon — this page is part of the Surtax Oversight Pro consolidated dashboard.</p>
+
+    <!-- Category Breakdown -->
+    {% for cat_id, cat in health.categories.items() %}
+    <div class="bg-white rounded-xl shadow-sm border">
+        <div class="p-5 border-b flex items-center justify-between">
+            <h3 class="font-semibold text-gray-900">{{ cat.name }}</h3>
+            <span class="px-3 py-1 rounded-full text-sm font-medium
+                {% if cat.score >= 90 %}bg-green-100 text-green-700
+                {% elif cat.score >= 75 %}bg-blue-100 text-blue-700
+                {% elif cat.score >= 60 %}bg-yellow-100 text-yellow-700
+                {% else %}bg-red-100 text-red-700{% endif %}">
+                {{ cat.score }}/100
+            </span>
+        </div>
+        <div class="p-5 space-y-4">
+            {% for kpi in cat.kpis %}
+            <div>
+                <div class="flex justify-between text-sm mb-1">
+                    <span class="text-gray-700">{{ kpi.name }}</span>
+                    <span class="text-gray-500">
+                        Actual: <strong>{{ kpi.actual_value }}{{ '%' if kpi.unit == 'percent' else ' hrs' if kpi.unit == 'business_hours' else '' }}</strong>
+                        &bull; Benchmark: {{ kpi.benchmark_value }}{{ '%' if kpi.unit == 'percent' else ' hrs' if kpi.unit == 'business_hours' else '' }}
+                    </span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="flex-1 bg-gray-200 rounded-full h-2">
+                        <div class="h-2 rounded-full
+                            {% if kpi.rating == 'Excellent' %}bg-green-500
+                            {% elif kpi.rating == 'Good' %}bg-blue-500
+                            {% elif kpi.rating == 'Fair' %}bg-yellow-500
+                            {% else %}bg-red-500{% endif %}"
+                            style="width: {{ [kpi.score, 100]|min }}%"></div>
+                    </div>
+                    <span class="text-xs px-2 py-0.5 rounded-full
+                        {% if kpi.rating == 'Excellent' %}bg-green-100 text-green-700
+                        {% elif kpi.rating == 'Good' %}bg-blue-100 text-blue-700
+                        {% elif kpi.rating == 'Fair' %}bg-yellow-100 text-yellow-700
+                        {% else %}bg-red-100 text-red-700{% endif %}">
+                        {{ kpi.rating }}
+                    </span>
+                </div>
+                <p class="text-xs text-gray-400 mt-1">{{ kpi.description }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+
+    <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-800">
+        <strong>Source:</strong> Coupa 2025 Total Spend Management Benchmark Report. Benchmarks represent median values across surveyed organizations.
     </div>
 </div>
 {% endblock %}
