@@ -325,6 +325,12 @@ def help_page():
     return render_template('tools/help.html', title='Help & Documentation')
 
 
+@tools_bp.route('/settings')
+def settings():
+    """User preferences and notification settings."""
+    return render_template('tools/settings.html', title='Settings')
+
+
 @tools_bp.route('/public')
 def public_portal():
     """Public transparency portal (read-only)."""
