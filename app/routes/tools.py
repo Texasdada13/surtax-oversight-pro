@@ -1,10 +1,66 @@
-"""Tools routes - meeting mode, AI chat, compliance, map, public portal."""
+"""Tools routes - meeting mode, AI chat, compliance, map, public portal, search."""
 
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, request
 from app.database import get_db
 from app.services.ai_chat import get_guided_prompts
 
 tools_bp = Blueprint('tools', __name__, url_prefix='/tools')
+
+
+@tools_bp.route('/search')
+def search():
+    """Global search across contracts, vendors, schools, and documents."""
+    q = request.args.get('q', '').strip()
+    results = {'contracts': [], 'vendors': [], 'documents': []}
+    total = 0
+
+    if q and len(q) >= 2:
+        db = get_db()
+        cursor = db.cursor()
+        like = f'%{q}%'
+
+        # Search contracts
+        cursor.execute('''
+            SELECT contract_id, title, vendor_name, surtax_category, school_name,
+                   current_amount, status, percent_complete, overall_health_score
+            FROM contracts
+            WHERE is_deleted = 0
+              AND (title LIKE ? OR vendor_name LIKE ? OR school_name LIKE ?
+                   OR purpose LIKE ? OR contract_id LIKE ?)
+            ORDER BY current_amount DESC LIMIT 20
+        ''', (like, like, like, like, like))
+        results['contracts'] = [dict(row) for row in cursor.fetchall()]
+
+        # Search vendors
+        cursor.execute('''
+            SELECT v.vendor_id, v.name, v.headquarters_city, v.headquarters_state,
+                   v.vendor_size, v.performance_score,
+                   COUNT(c.contract_id) as contract_count
+            FROM vendors v
+            LEFT JOIN contracts c ON v.vendor_id = c.vendor_id AND c.is_deleted = 0
+            WHERE v.name LIKE ? OR v.contact_name LIKE ?
+            GROUP BY v.vendor_id
+            ORDER BY contract_count DESC LIMIT 10
+        ''', (like, like))
+        results['vendors'] = [dict(row) for row in cursor.fetchall()]
+
+        # Search documents
+        cursor.execute('''
+            SELECT d.document_id, d.title, d.document_type, d.uploaded_date,
+                   c.title as contract_title
+            FROM documents d
+            LEFT JOIN contracts c ON d.contract_id = c.contract_id
+            WHERE d.is_deleted = 0
+              AND (d.title LIKE ? OR d.document_type LIKE ?)
+            ORDER BY d.uploaded_date DESC LIMIT 10
+        ''', (like, like))
+        results['documents'] = [dict(row) for row in cursor.fetchall()]
+
+        total = len(results['contracts']) + len(results['vendors']) + len(results['documents'])
+
+    return render_template('tools/search.html',
+                           title='Search',
+                           q=q, results=results, total=total)
 
 
 @tools_bp.route('/ask')

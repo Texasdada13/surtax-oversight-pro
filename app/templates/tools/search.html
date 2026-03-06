@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block page_title %}Search{% endblock %}
+{% block page_subtitle %}Find contracts, vendors, and documents{% endblock %}
+
+{% block content %}
+<style>
+    main { background: #0f172a !important; }
+    main > div { padding: 1.5rem !important; }
+    .dark-card { background: #1e293b; border: 1px solid #334155; border-radius: 0.75rem; }
+</style>
+
+<!-- Search Box -->
+<div class="mb-6">
+    <h1 class="text-3xl font-bold text-white mb-4">Search</h1>
+    <form method="GET" action="{{ url_for('tools.search') }}" class="flex gap-3">
+        <div class="relative flex-1">
+            <input type="text" name="q" value="{{ q }}" placeholder="Search contracts, vendors, documents..."
+                   class="w-full px-4 py-3 bg-[#1e293b] border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                   autofocus>
+            <svg class="w-5 h-5 text-slate-500 absolute right-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+        </div>
+        <button type="submit" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">Search</button>
+    </form>
+</div>
+
+{% if q %}
+<!-- Results Summary -->
+<p class="text-slate-400 text-sm mb-4">
+    {% if total > 0 %}
+    Found <strong class="text-white">{{ total }}</strong> results for "<strong class="text-white">{{ q }}</strong>"
+    {% else %}
+    No results found for "<strong class="text-white">{{ q }}</strong>"
+    {% endif %}
+</p>
+
+<!-- Contracts -->
+{% if results.contracts %}
+<div class="dark-card mb-6">
+    <div class="p-5 border-b border-slate-700">
+        <h3 class="font-semibold text-white">Contracts ({{ results.contracts|length }})</h3>
+    </div>
+    <div class="divide-y divide-slate-800">
+        {% for c in results.contracts %}
+        <a href="{% if c.surtax_category %}{{ url_for('surtax.project_detail', contract_id=c.contract_id) }}{% else %}{{ url_for('contracts.contract_detail', contract_id=c.contract_id) }}{% endif %}"
+           class="block px-5 py-3 hover:bg-slate-800/50">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-blue-400 font-medium">{{ c.title }}</p>
+                    <p class="text-xs text-slate-500">
+                        {{ c.vendor_name or '' }}
+                        {% if c.surtax_category %} &bull; {{ c.surtax_category }}{% endif %}
+                        {% if c.school_name %} &bull; {{ c.school_name }}{% endif %}
+                    </p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="text-sm text-slate-300">{{ (c.current_amount or 0)|currency_short }}</span>
+                    <span class="px-2 py-0.5 text-xs rounded-full
+                        {% if c.status == 'Active' %}bg-green-500/20 text-green-300
+                        {% elif c.status == 'Complete' %}bg-blue-500/20 text-blue-300
+                        {% else %}bg-slate-700 text-slate-400{% endif %}">{{ c.status }}</span>
+                    {% if c.overall_health_score %}
+                    <span class="inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold
+                        {% if c.overall_health_score >= 70 %}bg-green-500/20 text-green-300
+                        {% elif c.overall_health_score >= 50 %}bg-yellow-500/20 text-yellow-300
+                        {% else %}bg-red-500/20 text-red-300{% endif %}">{{ c.overall_health_score }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Vendors -->
+{% if results.vendors %}
+<div class="dark-card mb-6">
+    <div class="p-5 border-b border-slate-700">
+        <h3 class="font-semibold text-white">Vendors ({{ results.vendors|length }})</h3>
+    </div>
+    <div class="divide-y divide-slate-800">
+        {% for v in results.vendors %}
+        <a href="{{ url_for('contracts.vendor_detail', vendor_id=v.vendor_id) }}"
+           class="block px-5 py-3 hover:bg-slate-800/50">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-blue-400 font-medium">{{ v.name }}</p>
+                    <p class="text-xs text-slate-500">{{ v.headquarters_city or '' }}{% if v.headquarters_state %}, {{ v.headquarters_state }}{% endif %} &bull; {{ v.contract_count }} contracts</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    {% if v.vendor_size %}
+                    <span class="px-2 py-0.5 text-xs rounded-full
+                        {% if v.vendor_size == 'Large' %}bg-purple-500/20 text-purple-300
+                        {% elif v.vendor_size == 'Medium' %}bg-blue-500/20 text-blue-300
+                        {% else %}bg-green-500/20 text-green-300{% endif %}">{{ v.vendor_size }}</span>
+                    {% endif %}
+                    {% if v.performance_score %}
+                    <span class="text-sm {% if v.performance_score >= 80 %}text-green-400{% elif v.performance_score >= 60 %}text-yellow-400{% else %}text-red-400{% endif %}">{{ v.performance_score|round(1) }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Documents -->
+{% if results.documents %}
+<div class="dark-card mb-6">
+    <div class="p-5 border-b border-slate-700">
+        <h3 class="font-semibold text-white">Documents ({{ results.documents|length }})</h3>
+    </div>
+    <div class="divide-y divide-slate-800">
+        {% for d in results.documents %}
+        <div class="px-5 py-3">
+            <p class="text-white font-medium">{{ d.title }}</p>
+            <p class="text-xs text-slate-500">{{ d.document_type or '' }} {% if d.contract_title %}&bull; {{ d.contract_title }}{% endif %} {% if d.uploaded_date %}&bull; {{ d.uploaded_date|date }}{% endif %}</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- No Results -->
+{% if total == 0 %}
+<div class="dark-card p-12 text-center">
+    <svg class="w-16 h-16 mx-auto text-slate-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+    </svg>
+    <p class="text-slate-400">No results found. Try a different search term.</p>
+</div>
+{% endif %}
+
+{% else %}
+<!-- No Query Yet -->
+<div class="dark-card p-12 text-center">
+    <svg class="w-16 h-16 mx-auto text-slate-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+    </svg>
+    <p class="text-slate-400">Enter a search term to find contracts, vendors, and documents</p>
+</div>
+{% endif %}
+{% endblock %}
