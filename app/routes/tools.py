@@ -319,6 +319,12 @@ def map_view():
                            projects=projects)
 
 
+@tools_bp.route('/help')
+def help_page():
+    """Help and documentation."""
+    return render_template('tools/help.html', title='Help & Documentation')
+
+
 @tools_bp.route('/public')
 def public_portal():
     """Public transparency portal (read-only)."""

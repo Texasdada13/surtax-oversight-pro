@@ -77,7 +77,8 @@ NAVIGATION = {
             {'id': 'tools_map', 'label': 'Map View', 'path': '/tools/map', 'icon': 'map', 'visible_to': ['committee']},
             {'id': 'tools_public', 'label': 'Public Portal', 'path': '/tools/public', 'icon': 'globe', 'visible_to': ['committee']},
             {'id': 'monitoring_alerts', 'label': 'Alerts', 'path': '/monitoring/alerts', 'icon': 'bell', 'visible_to': ['committee']},
-            {'id': 'monitoring_audit', 'label': 'Audit Trail', 'path': '/monitoring/audit', 'icon': 'clock', 'visible_to': ['committee']}
+            {'id': 'monitoring_audit', 'label': 'Audit Trail', 'path': '/monitoring/audit', 'icon': 'clock', 'visible_to': ['committee']},
+            {'id': 'tools_help', 'label': 'Help', 'path': '/tools/help', 'icon': 'questionMark', 'visible_to': ['committee']}
         ]
     },
 
@@ -141,7 +142,8 @@ NAVIGATION = {
             {'id': 'tools_meeting', 'label': 'Meeting Mode', 'path': '/tools/meeting', 'icon': 'presentation', 'visible_to': ['staff']},
             {'id': 'tools_compliance', 'label': 'Compliance', 'path': '/tools/compliance', 'icon': 'checkCircle', 'visible_to': ['staff']},
             {'id': 'tools_map', 'label': 'Map View', 'path': '/tools/map', 'icon': 'map', 'visible_to': ['staff']},
-            {'id': 'tools_public', 'label': 'Public Portal', 'path': '/tools/public', 'icon': 'globe', 'visible_to': ['staff']}
+            {'id': 'tools_public', 'label': 'Public Portal', 'path': '/tools/public', 'icon': 'globe', 'visible_to': ['staff']},
+            {'id': 'tools_help', 'label': 'Help', 'path': '/tools/help', 'icon': 'questionMark', 'visible_to': ['staff']}
         ]
     },
 

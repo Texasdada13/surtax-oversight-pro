@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block page_title %}Help & Documentation{% endblock %}
+{% block page_subtitle %}Quick reference guide for Surtax Oversight Pro{% endblock %}
+
+{% block content %}
+<style>
+    main { background: #0f172a !important; }
+    main > div { padding: 1.5rem !important; }
+    .dark-card { background: #1e293b; border: 1px solid #334155; border-radius: 0.75rem; }
+</style>
+
+<div class="max-w-4xl mx-auto space-y-6">
+
+    <!-- Getting Started -->
+    <div class="dark-card p-6">
+        <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+            <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            Getting Started
+        </h2>
+        <div class="space-y-3 text-sm text-slate-300">
+            <p>Surtax Oversight Pro provides two main views for managing government contracts and surtax-funded capital projects:</p>
+            <ul class="list-disc list-inside space-y-1 text-slate-400">
+                <li><strong class="text-slate-200">Surtax Oversight</strong> — Focus on surtax-funded capital projects, schools, and committee concerns</li>
+                <li><strong class="text-slate-200">Contract Management</strong> — Full contract lifecycle, vendor performance, and executive analytics</li>
+            </ul>
+            <p class="text-slate-400">Toggle between views using the switch at the top of the sidebar.</p>
+        </div>
+    </div>
+
+    <!-- Personas -->
+    <div class="dark-card p-6">
+        <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+            <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+            Personas
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="p-4 bg-slate-800/50 rounded-lg border border-slate-700">
+                <h3 class="font-semibold text-white mb-2">Committee Member</h3>
+                <p class="text-sm text-slate-400">High-level oversight view with simplified navigation. See portfolio health, open concerns, and meeting preparation tools.</p>
+            </div>
+            <div class="p-4 bg-slate-800/50 rounded-lg border border-slate-700">
+                <h3 class="font-semibold text-white mb-2">District Staff</h3>
+                <p class="text-sm text-slate-400">Full access to analytics, detailed contract data, vendor management, risk monitoring, and compliance tools.</p>
+            </div>
+        </div>
+        <p class="text-xs text-slate-500 mt-3">Switch personas using the dropdown in the top-right header bar.</p>
+    </div>
+
+    <!-- Key Features -->
+    <div class="dark-card p-6">
+        <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+            <svg class="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+            Key Features
+        </h2>
+        <div class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {% set features = [
+                    ('Health Scoring', 'Each project gets a 0-100 health score based on budget utilization, schedule adherence, and risk factors.', 'Green (70+) = On Track, Yellow (50-69) = Caution, Red (<50) = Critical'),
+                    ('EVM Forecasting', 'Earned Value Management predicts final cost at completion using CPI (Cost Performance Index) and SPI (Schedule Performance Index).', 'Found in Executive Analytics under Contract Management view.'),
+                    ('Meeting Preparation', 'Auto-generates agenda with estimated timing, pulls critical contracts, open concerns, and pending approvals.', 'Use "Present Full Screen" for projector/meeting display.'),
+                    ('Data Export', 'Export contracts, vendors, and change orders to CSV for offline analysis or reporting.', 'Export buttons are on the contracts list, vendor dashboard, and change orders pages.'),
+                    ('Compliance Tracking', 'Monitors insurance verification, bonding, board approvals, and sole-source justifications.', 'Flags non-compliant contracts by severity level.'),
+                    ('AI Assistant', 'Ask questions about your portfolio in natural language. Powered by Claude API.', 'Click "Ask AI" in the sidebar or use guided prompts for common queries.')
+                ] %}
+                {% for name, desc, note in features %}
+                <div class="p-4 bg-slate-800/50 rounded-lg border border-slate-700">
+                    <h3 class="font-semibold text-white mb-1">{{ name }}</h3>
+                    <p class="text-sm text-slate-400">{{ desc }}</p>
+                    <p class="text-xs text-slate-500 mt-2">{{ note }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Health Score Legend -->
+    <div class="dark-card p-6">
+        <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+            <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+            Status Indicators
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="text-center p-4 bg-green-500/10 rounded-lg border border-green-500/20">
+                <div class="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-2">
+                    <span class="text-green-300 font-bold">70+</span>
+                </div>
+                <p class="font-medium text-green-300">Healthy</p>
+                <p class="text-xs text-slate-400 mt-1">Project is on track with budget and schedule</p>
+            </div>
+            <div class="text-center p-4 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+                <div class="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center mx-auto mb-2">
+                    <span class="text-yellow-300 font-bold">50-69</span>
+                </div>
+                <p class="font-medium text-yellow-300">Caution</p>
+                <p class="text-xs text-slate-400 mt-1">Minor issues detected, monitoring recommended</p>
+            </div>
+            <div class="text-center p-4 bg-red-500/10 rounded-lg border border-red-500/20">
+                <div class="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-2">
+                    <span class="text-red-300 font-bold">&lt;50</span>
+                </div>
+                <p class="font-medium text-red-300">Critical</p>
+                <p class="text-xs text-slate-400 mt-1">Significant delays, overruns, or risk factors</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Keyboard Shortcuts -->
+    <div class="dark-card p-6">
+        <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+            <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path></svg>
+            Quick Tips
+        </h2>
+        <div class="space-y-2 text-sm text-slate-400">
+            <div class="flex items-center gap-3 py-2 border-b border-slate-700">
+                <span class="px-2 py-1 bg-slate-700 rounded text-xs text-slate-300 font-mono">Search</span>
+                <span>Use the search icon in the header to search across contracts, vendors, and documents</span>
+            </div>
+            <div class="flex items-center gap-3 py-2 border-b border-slate-700">
+                <span class="px-2 py-1 bg-slate-700 rounded text-xs text-slate-300 font-mono">Sidebar</span>
+                <span>Collapse the sidebar using the button at the bottom for more screen space</span>
+            </div>
+            <div class="flex items-center gap-3 py-2 border-b border-slate-700">
+                <span class="px-2 py-1 bg-slate-700 rounded text-xs text-slate-300 font-mono">Print</span>
+                <span>Meeting prep and annual report pages have print-optimized layouts</span>
+            </div>
+            <div class="flex items-center gap-3 py-2">
+                <span class="px-2 py-1 bg-slate-700 rounded text-xs text-slate-300 font-mono">Export</span>
+                <span>CSV exports are available on contracts, vendors, and change orders pages</span>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

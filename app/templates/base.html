@@ -54,6 +54,16 @@
         .sidebar-collapsed .sidebar-logo { margin-right: 0; }
         .sidebar-collapsed .view-toggle-text { display: none; }
 
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .hide-mobile { display: none !important; }
+            .mobile-stack { flex-direction: column !important; }
+            .mobile-full { width: 100% !important; min-width: 0 !important; }
+        }
+        @media (max-width: 1024px) {
+            .hide-tablet { display: none !important; }
+        }
+
         /* View mode toggle */
         .view-toggle {
             display: flex; border-radius: 0.5rem; overflow: hidden;
