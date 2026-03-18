@@ -83,8 +83,22 @@
             {% endif %}
         </div>
 
-        <!-- Right: Completion Donut -->
-        <div class="flex items-center gap-4 flex-shrink-0">
+        <!-- Right: Watch + Completion Donut -->
+        <div class="flex items-center gap-4 flex-shrink-0" x-data="{ watched: false }" x-init="watched = (JSON.parse(localStorage.getItem('surtaxWatchlist') || '[]')).includes('{{ project.contract_id }}')"
+            <button @click="
+                let ids = JSON.parse(localStorage.getItem('surtaxWatchlist') || '[]');
+                if (watched) { ids = ids.filter(i => i !== '{{ project.contract_id }}'); }
+                else { if (!ids.includes('{{ project.contract_id }}')) ids.push('{{ project.contract_id }}'); }
+                localStorage.setItem('surtaxWatchlist', JSON.stringify(ids));
+                watched = !watched;
+            " class="px-3 py-2 rounded-lg text-sm font-medium transition-all border"
+               :class="watched ? 'bg-blue-500/20 border-blue-500/40 text-blue-300' : 'bg-slate-800 border-slate-600 text-slate-400 hover:text-white hover:border-slate-500'">
+                <svg class="w-4 h-4 inline -mt-0.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                </svg>
+                <span x-text="watched ? 'Watching' : 'Watch'"></span>
+            </button>
             <div class="relative w-20 h-20">
                 <svg class="w-20 h-20 -rotate-90" viewBox="0 0 36 36">
                     <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"

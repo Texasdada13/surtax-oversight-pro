@@ -11,55 +11,62 @@ financials_bp = Blueprint('financials', __name__, url_prefix='/financials')
 
 @financials_bp.route('/')
 def home():
-    """Financial overview with budget summary."""
-    db = get_db()
-    cursor = db.cursor()
+    """Financial summary — county CAFR revenue/expenditure overview."""
+    # Demo CAFR data (would come from a cafr_data table in production)
+    revenue_sources = [
+        {'name': 'Ad Valorem Taxes', 'amount': 412500000},
+        {'name': 'Sales Surtax (Half-Cent)', 'amount': 98700000},
+        {'name': 'State Revenue Sharing', 'amount': 67300000},
+        {'name': 'Intergovernmental Revenue', 'amount': 54200000},
+        {'name': 'Charges for Services', 'amount': 42100000},
+        {'name': 'Special Assessments', 'amount': 31800000},
+        {'name': 'Licenses & Permits', 'amount': 28500000},
+        {'name': 'Investment Earnings', 'amount': 18900000},
+        {'name': 'Fines & Forfeitures', 'amount': 12400000},
+        {'name': 'Miscellaneous Revenue', 'amount': 8600000},
+    ]
+    expenditure_categories = [
+        {'name': 'Instruction & Education', 'amount': 285000000},
+        {'name': 'Capital Outlay & Construction', 'amount': 178500000},
+        {'name': 'General Government Services', 'amount': 98700000},
+        {'name': 'Financial & Administrative', 'amount': 67200000},
+        {'name': 'Student Transportation', 'amount': 45300000},
+        {'name': 'Maintenance & Operations', 'amount': 38100000},
+        {'name': 'Debt Service', 'amount': 32600000},
+        {'name': 'Technology Services', 'amount': 24800000},
+        {'name': 'Safety & Security', 'amount': 18200000},
+        {'name': 'Community Services', 'amount': 12500000},
+    ]
+    revenue_by_fund = [
+        {'fund': 'General Fund', 'amount': 425000000, 'pct': 55.0},
+        {'fund': 'Special Revenue', 'amount': 148000000, 'pct': 19.2},
+        {'fund': 'Capital Projects', 'amount': 112000000, 'pct': 14.5},
+        {'fund': 'Debt Service', 'amount': 52000000, 'pct': 6.7},
+        {'fund': 'Enterprise Fund', 'amount': 35000000, 'pct': 4.6},
+    ]
+    expenditure_by_fund = [
+        {'fund': 'General Fund', 'amount': 398000000, 'pct': 49.6},
+        {'fund': 'Special Revenue', 'amount': 142000000, 'pct': 17.7},
+        {'fund': 'Capital Projects', 'amount': 155000000, 'pct': 19.3},
+        {'fund': 'Debt Service', 'amount': 58000000, 'pct': 7.2},
+        {'fund': 'Enterprise Fund', 'amount': 49900000, 'pct': 6.2},
+    ]
 
-    # Portfolio financial summary
-    cursor.execute('''
-        SELECT
-            COUNT(*) as total_contracts,
-            SUM(original_amount) as total_original,
-            SUM(current_amount) as total_current,
-            SUM(total_paid) as total_spent,
-            SUM(current_amount - original_amount) as total_variance,
-            AVG(CASE WHEN original_amount > 0
-                THEN ((current_amount - original_amount) / original_amount * 100) ELSE 0 END) as avg_variance_pct,
-            SUM(CASE WHEN status = 'Active' THEN current_amount ELSE 0 END) as active_budget,
-            SUM(CASE WHEN status = 'Active' THEN total_paid ELSE 0 END) as active_spent
-        FROM contracts WHERE is_deleted = 0
-    ''')
-    summary = dict(cursor.fetchone())
-
-    # Spending by category
-    cursor.execute('''
-        SELECT surtax_category, COUNT(*) as count,
-               SUM(current_amount) as budget, SUM(total_paid) as spent
-        FROM contracts
-        WHERE is_deleted = 0 AND surtax_category IS NOT NULL
-        GROUP BY surtax_category ORDER BY budget DESC
-    ''')
-    by_category = [dict(row) for row in cursor.fetchall()]
-
-    # Monthly spending trend (last 12 months approximation from payments)
-    cursor.execute('''
-        SELECT strftime('%Y-%m', payment_date) as month,
-               SUM(amount) as total
-        FROM payments
-        GROUP BY month ORDER BY month DESC LIMIT 12
-    ''')
-    monthly_spend = [dict(row) for row in cursor.fetchall()]
-    monthly_spend.reverse()
-
-    # AI insights
-    insights = get_ai_insights(cursor)
+    total_revenue = sum(r['amount'] for r in revenue_sources)
+    total_expenditure = sum(e['amount'] for e in expenditure_categories)
+    net_position = total_revenue - total_expenditure
+    budget_health = round(min((total_revenue / total_expenditure * 100), 100), 1) if total_expenditure else 100
 
     return render_template('financials/financials.html',
-                           title='Financial Overview',
-                           summary=summary,
-                           by_category=by_category,
-                           monthly_spend=monthly_spend,
-                           insights=insights)
+                           title='Financial Summary',
+                           revenue_sources=revenue_sources,
+                           expenditure_categories=expenditure_categories,
+                           revenue_by_fund=revenue_by_fund,
+                           expenditure_by_fund=expenditure_by_fund,
+                           total_revenue=total_revenue,
+                           total_expenditure=total_expenditure,
+                           net_position=net_position,
+                           budget_health=budget_health)
 
 
 @financials_bp.route('/analytics')
@@ -165,10 +172,11 @@ def benchmarking():
 
 @financials_bp.route('/change-orders')
 def change_orders():
-    """Change order tracking."""
+    """Change order tracking — contract-level view."""
     db = get_db()
     cursor = db.cursor()
 
+    # Individual change orders (for detail reference)
     cursor.execute('''
         SELECT co.*, c.title as contract_title, c.contract_id as cid
         FROM change_orders co
@@ -178,14 +186,34 @@ def change_orders():
     ''')
     orders = [dict(row) for row in cursor.fetchall()]
 
+    # Contract-level aggregated view
+    cursor.execute('''
+        SELECT c.contract_id, c.title, c.vendor_name, c.original_amount, c.current_amount,
+               c.surtax_category, c.status as contract_status,
+               COUNT(co.change_order_id) as change_count,
+               SUM(co.change_value) as net_change,
+               SUM(CASE WHEN co.change_value > 0 THEN 1 ELSE 0 END) as increases,
+               SUM(CASE WHEN co.change_value < 0 THEN 1 ELSE 0 END) as decreases
+        FROM contracts c
+        JOIN change_orders co ON c.contract_id = co.contract_id
+        WHERE c.is_deleted = 0
+        GROUP BY c.contract_id
+        ORDER BY ABS(SUM(co.change_value)) DESC
+    ''')
+    contract_changes = [dict(row) for row in cursor.fetchall()]
+    for cc in contract_changes:
+        orig = cc.get('original_amount') or 0
+        cc['pct_change'] = round(((cc.get('net_change') or 0) / orig * 100), 1) if orig > 0 else 0
+
     # Summary stats
     cursor.execute('''
         SELECT
             COUNT(*) as total,
             SUM(co.change_value) as total_amount,
+            SUM(CASE WHEN co.change_value > 0 THEN 1 ELSE 0 END) as budget_increases,
+            SUM(CASE WHEN co.change_value < 0 THEN 1 ELSE 0 END) as budget_decreases,
             SUM(CASE WHEN co.status = 'Approved' THEN 1 ELSE 0 END) as approved,
-            SUM(CASE WHEN co.status = 'Pending' THEN 1 ELSE 0 END) as pending,
-            SUM(CASE WHEN co.status = 'Rejected' THEN 1 ELSE 0 END) as rejected
+            SUM(CASE WHEN co.status = 'Pending' THEN 1 ELSE 0 END) as pending
         FROM change_orders co
         JOIN contracts c ON co.contract_id = c.contract_id
         WHERE c.is_deleted = 0
@@ -195,6 +223,7 @@ def change_orders():
     return render_template('financials/change_orders.html',
                            title='Change Orders',
                            orders=orders,
+                           contract_changes=contract_changes,
                            stats=stats)
 
 

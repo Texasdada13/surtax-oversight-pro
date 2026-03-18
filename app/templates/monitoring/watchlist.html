@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block page_title %}Watchlist{% endblock %}
-{% block page_subtitle %}Contracts requiring attention{% endblock %}
+{% block page_subtitle %}Track projects you're monitoring{% endblock %}
 
 {% block content %}
 <style>
@@ -13,59 +13,198 @@
         padding: 1.25rem; transition: all 0.15s ease;
     }
     .watch-card:hover { background: #243044; border-color: #475569; }
+    .btn-primary {
+        background: #2563eb; color: white; padding: 0.5rem 1rem; border-radius: 0.5rem;
+        font-size: 0.875rem; font-weight: 500; transition: background 0.15s;
+        text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;
+    }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-remove {
+        background: transparent; border: 1px solid #475569; color: #94a3b8;
+        padding: 0.375rem 0.75rem; border-radius: 0.5rem; font-size: 0.75rem;
+        cursor: pointer; transition: all 0.15s;
+    }
+    .btn-remove:hover { background: #dc2626; border-color: #dc2626; color: white; }
 </style>
 
-<!-- Header -->
-<div class="flex items-center justify-between mb-6">
-    <div>
-        <h1 class="text-3xl font-bold text-white">Watchlist</h1>
-        <p class="text-slate-400 mt-1">Contracts requiring attention — delayed, over budget, or low health score</p>
-    </div>
-    <span class="px-3 py-1 bg-orange-500/20 text-orange-300 rounded-full text-sm font-medium">{{ total }} items</span>
-</div>
-
-<div class="space-y-3">
-    {% for c in contracts %}
-    <div class="watch-card" style="border-left: 4px solid {% if c.risk_level == 'Critical' %}#ef4444{% elif c.risk_level == 'High' %}#f97316{% else %}#eab308{% endif %};">
-        <div class="flex items-start justify-between">
-            <div class="flex-1">
-                <div class="flex items-center gap-3 flex-wrap">
-                    <a href="{% if c.surtax_category %}{{ url_for('surtax.project_detail', contract_id=c.contract_id) }}{% else %}{{ url_for('contracts.contract_detail', contract_id=c.contract_id) }}{% endif %}"
-                       class="text-base font-semibold text-blue-400 hover:text-blue-300">{{ c.title }}</a>
-                    <span class="px-2 py-0.5 text-xs rounded-full font-medium
-                        {% if c.risk_level == 'Critical' %}bg-red-500/20 text-red-300
-                        {% elif c.risk_level == 'High' %}bg-orange-500/20 text-orange-300
-                        {% elif c.risk_level == 'Medium' %}bg-yellow-500/20 text-yellow-300
-                        {% else %}bg-green-500/20 text-green-300{% endif %}">{{ c.risk_level }}</span>
-                </div>
-                <p class="text-sm text-slate-500 mt-1">{{ c.vendor_name or 'No vendor' }} &bull; {{ c.contract_id }}</p>
-                <div class="flex gap-4 mt-2 text-sm flex-wrap">
-                    {% if c.is_delayed %}
-                    <span class="text-red-400">Delayed {{ c.delay_days or 0 }} days</span>
-                    {% endif %}
-                    {% if c.is_over_budget %}
-                    <span class="text-orange-400">Over budget {{ "%.1f"|format(c.budget_variance_pct or 0) }}%</span>
-                    {% endif %}
-                    <span class="text-slate-500">Health: {{ c.overall_health_score|round|int }}/100</span>
-                    <span class="text-slate-500">Budget: {{ (c.current_amount or 0)|currency_short }}</span>
-                </div>
-            </div>
-            <div class="text-right ml-4">
-                <div class="inline-flex items-center justify-center w-12 h-12 rounded-full text-lg font-bold
-                    {% if c.overall_health_score >= 70 %}bg-green-500/20 text-green-400
-                    {% elif c.overall_health_score >= 50 %}bg-yellow-500/20 text-yellow-400
-                    {% else %}bg-red-500/20 text-red-400{% endif %}">
-                    {{ c.overall_health_score|round|int }}
-                </div>
-            </div>
+<div x-data="watchlistManager()" x-init="loadWatchlist()">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-white">Watchlist</h1>
+            <p class="text-slate-400 mt-1">
+                <span x-show="projects.length > 0" x-text="projects.length + ' project' + (projects.length !== 1 ? 's' : '') + ' being tracked'"></span>
+                <span x-show="projects.length === 0">Add projects to track their progress</span>
+            </p>
+        </div>
+        <div class="flex items-center gap-3">
+            <template x-if="projects.length > 0">
+                <button @click="clearAll()" class="btn-remove">Clear All</button>
+            </template>
+            <a href="{{ url_for('surtax.projects') }}" class="btn-primary">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Add Projects
+            </a>
         </div>
     </div>
-    {% endfor %}
-    {% if not contracts %}
-    <div class="dark-card p-12 text-center">
-        <p class="text-slate-400 text-lg">No contracts on watchlist</p>
-        <p class="text-slate-500 text-sm mt-1">All contracts are performing within acceptable parameters</p>
+
+    <!-- Loading -->
+    <div x-show="loading" class="dark-card p-12 text-center">
+        <svg class="w-8 h-8 mx-auto text-blue-400 animate-spin mb-3" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+        </svg>
+        <p class="text-slate-400">Loading watchlist...</p>
     </div>
-    {% endif %}
+
+    <!-- Empty State -->
+    <div x-show="!loading && projects.length === 0" class="dark-card p-16 text-center">
+        <svg class="w-20 h-20 mx-auto text-slate-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+        </svg>
+        <h3 class="text-xl font-semibold text-white mb-2">No projects in your watchlist</h3>
+        <p class="text-slate-400 max-w-md mx-auto mb-6">
+            Add projects to your watchlist to track their progress and get quick access to their status.
+            Click the eye icon on any project to start tracking it.
+        </p>
+        <a href="{{ url_for('surtax.projects') }}" class="btn-primary">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+            Browse Projects
+        </a>
+    </div>
+
+    <!-- Project Cards -->
+    <div x-show="!loading && projects.length > 0" class="space-y-3">
+        <template x-for="p in projects" :key="p.contract_id">
+            <div class="watch-card" :style="'border-left: 4px solid ' + getRiskColor(p.risk_level)">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-3 flex-wrap">
+                            <a :href="getProjectUrl(p)" class="text-base font-semibold text-blue-400 hover:text-blue-300" x-text="p.title"></a>
+                            <span class="px-2 py-0.5 text-xs rounded-full font-medium"
+                                  :class="getRiskBadgeClass(p.risk_level)" x-text="p.risk_level"></span>
+                            <template x-if="p.is_delayed">
+                                <span class="px-2 py-0.5 text-xs rounded-full font-medium bg-red-500/20 text-red-300">Delayed</span>
+                            </template>
+                            <template x-if="p.is_over_budget">
+                                <span class="px-2 py-0.5 text-xs rounded-full font-medium bg-orange-500/20 text-orange-300">Over Budget</span>
+                            </template>
+                        </div>
+                        <p class="text-sm text-slate-500 mt-1">
+                            <span x-text="p.vendor_name || 'No vendor'"></span> &bull;
+                            <span x-text="p.contract_id"></span>
+                            <template x-if="p.school_name">
+                                <span> &bull; <span x-text="p.school_name"></span></span>
+                            </template>
+                        </p>
+                        <div class="flex gap-4 mt-2 text-sm flex-wrap">
+                            <span class="text-slate-500">Health: <span class="font-medium" :class="p.overall_health_score >= 70 ? 'text-green-400' : (p.overall_health_score >= 50 ? 'text-yellow-400' : 'text-red-400')" x-text="Math.round(p.overall_health_score) + '/100'"></span></span>
+                            <span class="text-slate-500">Budget: <span class="font-medium text-slate-300" x-text="formatCurrency(p.current_amount)"></span></span>
+                            <span class="text-slate-500">Progress: <span class="font-medium text-slate-300" x-text="Math.round(p.percent_complete) + '%'"></span></span>
+                        </div>
+                        <!-- Progress Bar -->
+                        <div class="w-full max-w-xs bg-slate-700 rounded-full h-1.5 mt-2">
+                            <div class="h-1.5 rounded-full transition-all"
+                                 :class="p.percent_complete >= 75 ? 'bg-green-500' : (p.percent_complete >= 50 ? 'bg-blue-500' : 'bg-amber-500')"
+                                 :style="'width:' + Math.min(p.percent_complete, 100) + '%'"></div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 ml-4">
+                        <div class="inline-flex items-center justify-center w-12 h-12 rounded-full text-lg font-bold"
+                             :class="p.overall_health_score >= 70 ? 'bg-green-500/20 text-green-400' : (p.overall_health_score >= 50 ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400')"
+                             x-text="Math.round(p.overall_health_score)"></div>
+                        <button @click="removeProject(p.contract_id)" class="btn-remove" title="Remove from watchlist">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function watchlistManager() {
+    return {
+        projects: [],
+        loading: true,
+
+        getWatchedIds() {
+            try {
+                return JSON.parse(localStorage.getItem('surtaxWatchlist') || '[]');
+            } catch { return []; }
+        },
+
+        saveWatchedIds(ids) {
+            localStorage.setItem('surtaxWatchlist', JSON.stringify(ids));
+        },
+
+        async loadWatchlist() {
+            const ids = this.getWatchedIds();
+            if (ids.length === 0) {
+                this.loading = false;
+                return;
+            }
+            try {
+                const resp = await fetch('/api/watchlist/projects?ids=' + encodeURIComponent(ids.join(',')));
+                this.projects = await resp.json();
+            } catch (e) {
+                console.error('Failed to load watchlist:', e);
+                this.projects = [];
+            }
+            this.loading = false;
+        },
+
+        removeProject(contractId) {
+            const ids = this.getWatchedIds().filter(id => id !== contractId);
+            this.saveWatchedIds(ids);
+            this.projects = this.projects.filter(p => p.contract_id !== contractId);
+        },
+
+        clearAll() {
+            if (confirm('Remove all projects from your watchlist?')) {
+                this.saveWatchedIds([]);
+                this.projects = [];
+            }
+        },
+
+        getProjectUrl(p) {
+            return p.surtax_category
+                ? '/surtax/projects/' + p.contract_id
+                : '/contracts/' + p.contract_id;
+        },
+
+        getRiskColor(level) {
+            const colors = { Critical: '#ef4444', High: '#f97316', Medium: '#eab308', Low: '#22c55e' };
+            return colors[level] || '#64748b';
+        },
+
+        getRiskBadgeClass(level) {
+            const classes = {
+                Critical: 'bg-red-500/20 text-red-300',
+                High: 'bg-orange-500/20 text-orange-300',
+                Medium: 'bg-yellow-500/20 text-yellow-300',
+                Low: 'bg-green-500/20 text-green-300'
+            };
+            return classes[level] || 'bg-slate-500/20 text-slate-400';
+        },
+
+        formatCurrency(val) {
+            if (!val) return '$0';
+            if (val >= 1000000) return '$' + (val / 1000000).toFixed(1) + 'M';
+            if (val >= 1000) return '$' + Math.round(val / 1000) + 'K';
+            return '$' + Math.round(val);
+        }
+    };
+}
+</script>
 {% endblock %}

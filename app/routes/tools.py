@@ -352,11 +352,20 @@ def public_portal():
         SELECT contract_id, title, vendor_name, surtax_category,
                current_amount, total_paid, percent_complete, status
         FROM contracts
-        WHERE is_deleted = 0
+        WHERE is_deleted = 0 AND status != 'Complete'
         ORDER BY current_amount DESC
     ''')
     projects = [dict(row) for row in cursor.fetchall()]
 
+    cursor.execute('''
+        SELECT contract_id, title, vendor_name, surtax_category,
+               current_amount, total_paid, percent_complete, status
+        FROM contracts
+        WHERE is_deleted = 0 AND status = 'Complete'
+        ORDER BY current_amount DESC LIMIT 10
+    ''')
+    completed = [dict(row) for row in cursor.fetchall()]
+
     return render_template('tools/public_portal.html',
                            title='Public Portal',
-                           stats=stats, projects=projects)
+                           stats=stats, projects=projects, completed=completed)

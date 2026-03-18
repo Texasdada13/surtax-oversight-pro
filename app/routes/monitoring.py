@@ -58,27 +58,9 @@ def risk():
 
 @monitoring_bp.route('/watchlist')
 def watchlist():
-    """Contracts on watchlist (health < 60 or flagged)."""
-    db = get_db()
-    cursor = db.cursor()
-
-    cursor.execute('''
-        SELECT * FROM contracts
-        WHERE is_deleted = 0
-          AND (overall_health_score < 60
-               OR is_delayed = 1
-               OR is_over_budget = 1)
-        ORDER BY overall_health_score ASC
-    ''')
-    contracts = [dict(row) for row in cursor.fetchall()]
-
-    engine = ContractScoringEngine()
-    scored = [engine.score_contract(c) for c in contracts]
-
+    """User-managed watchlist — projects tracked via localStorage."""
     return render_template('monitoring/watchlist.html',
-                           title='Watchlist',
-                           contracts=scored,
-                           total=len(scored))
+                           title='Watchlist')
 
 
 @monitoring_bp.route('/audit')

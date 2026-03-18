@@ -23,35 +23,24 @@
 <!-- KPI Row -->
 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
     <div class="kpi-card">
-        <p class="text-xs text-slate-500 font-medium">Avg Health Score</p>
-        <p class="text-3xl font-bold mt-1 {% if avg_health >= 70 %}text-green-400{% elif avg_health >= 50 %}text-yellow-400{% else %}text-red-400{% endif %}">{{ "%.0f"|format(avg_health) }}</p>
-        <p class="text-xs text-slate-500">out of 100</p>
+        <p class="text-xs text-slate-500 font-medium">Total Projects</p>
+        <p class="text-3xl font-bold text-white mt-1">{{ total_contracts }}</p>
+        <p class="text-xs text-slate-500">active contracts monitored</p>
     </div>
-    <div class="kpi-card">
-        <p class="text-xs text-slate-500 font-medium">Contracts at Risk</p>
-        <p class="text-3xl font-bold text-red-400 mt-1">{{ total_at_risk }}</p>
-        <p class="text-xs text-slate-500">Critical + High</p>
+    <div class="kpi-card" style="border-left: 3px solid #ef4444;">
+        <p class="text-xs text-slate-500 font-medium">Critical Risk</p>
+        <p class="text-3xl font-bold text-red-400 mt-1">{{ risk_distribution.get('Critical', 0) }}</p>
+        <p class="text-xs text-slate-500">immediate attention needed</p>
     </div>
-    <div class="kpi-card">
-        <p class="text-xs text-slate-500 font-medium">Value at Risk</p>
-        <p class="text-3xl font-bold text-red-400 mt-1">{{ total_value_at_risk|currency_short }}</p>
-        <p class="text-xs text-slate-500">total exposure</p>
+    <div class="kpi-card" style="border-left: 3px solid #f97316;">
+        <p class="text-xs text-slate-500 font-medium">High Risk</p>
+        <p class="text-3xl font-bold text-orange-400 mt-1">{{ risk_distribution.get('High', 0) }}</p>
+        <p class="text-xs text-slate-500">close monitoring required</p>
     </div>
-    <div class="kpi-card">
-        <p class="text-xs text-slate-500 font-medium">Risk Distribution</p>
-        <div class="flex flex-wrap gap-1 mt-2">
-            {% for level, count in risk_distribution.items() %}
-            {% if count > 0 %}
-            <span class="px-2 py-0.5 text-xs rounded-full font-medium
-                {% if level == 'Critical' %}bg-red-500/20 text-red-300
-                {% elif level == 'High' %}bg-orange-500/20 text-orange-300
-                {% elif level == 'Medium' %}bg-yellow-500/20 text-yellow-300
-                {% else %}bg-green-500/20 text-green-300{% endif %}">
-                {{ count }} {{ level }}
-            </span>
-            {% endif %}
-            {% endfor %}
-        </div>
+    <div class="kpi-card" style="border-left: 3px solid #22c55e;">
+        <p class="text-xs text-slate-500 font-medium">Low Risk</p>
+        <p class="text-3xl font-bold text-green-400 mt-1">{{ risk_distribution.get('Low', 0) }}</p>
+        <p class="text-xs text-slate-500">performing within parameters</p>
     </div>
 </div>
 
@@ -95,9 +84,9 @@
                     <th class="px-4 py-3 text-center font-medium text-slate-400">Health</th>
                     <th class="px-4 py-3 text-center font-medium text-slate-400">Risk</th>
                     <th class="px-4 py-3 text-right font-medium text-slate-400">Budget</th>
+                    <th class="px-4 py-3 text-center font-medium text-slate-400">Progress</th>
                     <th class="px-4 py-3 text-center font-medium text-slate-400">Cost Score</th>
                     <th class="px-4 py-3 text-center font-medium text-slate-400">Schedule</th>
-                    <th class="px-4 py-3 text-right font-medium text-slate-400">Forecast</th>
                 </tr>
             </thead>
             <tbody>
@@ -126,17 +115,21 @@
                         </span>
                     </td>
                     <td class="px-4 py-3 text-right text-slate-300">{{ (c.current_amount or 0)|currency_short }}</td>
+                    <td class="px-4 py-3 text-center">
+                        <div class="flex items-center gap-2 justify-center">
+                            <div class="w-16 bg-slate-700 rounded-full h-1.5">
+                                <div class="h-1.5 rounded-full {% if (c.percent_complete or 0) >= 75 %}bg-green-500{% elif (c.percent_complete or 0) >= 50 %}bg-blue-500{% else %}bg-amber-500{% endif %}"
+                                     style="width: {{ [(c.percent_complete or 0), 100]|min }}%;"></div>
+                            </div>
+                            <span class="text-xs text-slate-400">{{ (c.percent_complete or 0)|round|int }}%</span>
+                        </div>
+                    </td>
                     <td class="px-4 py-3 text-center text-slate-300">{{ c.cost_variance_score|round|int }}</td>
                     <td class="px-4 py-3 text-center text-slate-300">{{ c.schedule_variance_score|round|int }}</td>
-                    <td class="px-4 py-3 text-right text-slate-300">
-                        {% if c.analytics %}
-                        {{ c.analytics.forecast_at_completion|currency_short }}
-                        {% endif %}
-                    </td>
                 </tr>
                 {% endfor %}
                 {% if not top_risk %}
-                <tr><td colspan="8" class="px-4 py-8 text-center text-slate-500">No high-risk contracts found</td></tr>
+                <tr><td colspan="7" class="px-4 py-8 text-center text-slate-500">No high-risk contracts found</td></tr>
                 {% endif %}
             </tbody>
         </table>

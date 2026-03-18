@@ -68,6 +68,33 @@ def stats():
     })
 
 
+@api_bp.route('/watchlist/projects')
+def watchlist_projects():
+    """Return project data for given contract_ids (used by client-side watchlist)."""
+    ids = request.args.get('ids', '')
+    if not ids:
+        return jsonify([])
+
+    contract_ids = [i.strip() for i in ids.split(',') if i.strip()]
+    if not contract_ids:
+        return jsonify([])
+
+    db = get_db()
+    cursor = db.cursor()
+    placeholders = ','.join('?' * len(contract_ids))
+    cursor.execute(f'''
+        SELECT contract_id, title, vendor_name, surtax_category, school_name,
+               status, current_amount, total_paid, percent_complete,
+               overall_health_score, risk_level, is_delayed, delay_days,
+               is_over_budget, budget_variance_pct
+        FROM contracts
+        WHERE is_deleted = 0 AND contract_id IN ({placeholders})
+        ORDER BY overall_health_score ASC
+    ''', contract_ids)
+    projects = [dict(row) for row in cursor.fetchall()]
+    return jsonify(projects)
+
+
 @api_bp.route('/export/contracts')
 def export_contracts():
     """Export contracts to CSV."""
