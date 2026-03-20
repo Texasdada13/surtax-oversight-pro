@@ -1,7 +1,7 @@
 """Monitoring routes - risk, watchlist, audit, alerts."""
 
 from flask import Blueprint, render_template, request
-from app.database import get_db
+from app.database import get_db, get_cursor
 from app.services.scoring_engine import ContractScoringEngine, AlertGenerator
 from app.services.executive_analytics import ExecutiveAnalytics
 
@@ -12,7 +12,7 @@ monitoring_bp = Blueprint('monitoring', __name__, url_prefix='/monitoring')
 def risk():
     """Risk dashboard with scored contracts."""
     db = get_db()
-    cursor = db.cursor()
+    cursor = get_cursor(db)
 
     cursor.execute('''
         SELECT * FROM contracts
@@ -67,7 +67,7 @@ def watchlist():
 def audit():
     """Audit trail from audit_log table."""
     db = get_db()
-    cursor = db.cursor()
+    cursor = get_cursor(db)
 
     page = request.args.get('page', 1, type=int)
     per_page = 25
@@ -83,7 +83,7 @@ def audit():
                     ELSE NULL END as contract_title
         FROM audit_log a
         ORDER BY a.changed_at DESC
-        LIMIT ? OFFSET ?
+        LIMIT %s OFFSET %s
     ''', (per_page, offset))
     logs = [dict(row) for row in cursor.fetchall()]
 
@@ -101,7 +101,7 @@ def audit():
 def alerts():
     """Generated alerts from AlertGenerator."""
     db = get_db()
-    cursor = db.cursor()
+    cursor = get_cursor(db)
 
     cursor.execute('SELECT * FROM contracts WHERE is_deleted = 0')
     contracts = [dict(row) for row in cursor.fetchall()]

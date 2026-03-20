@@ -3,7 +3,7 @@
 import csv
 import io
 from flask import Blueprint, jsonify, request, session, Response
-from app.database import get_db
+from app.database import get_db, get_cursor
 
 api_bp = Blueprint('api', __name__)
 
@@ -41,7 +41,7 @@ def ask():
         return jsonify({'error': 'No question provided'}), 400
 
     db = get_db()
-    cursor = db.cursor()
+    cursor = get_cursor(db)
     result = ask_claude(question, cursor)
     return jsonify(result)
 
@@ -50,7 +50,7 @@ def ask():
 def stats():
     """Summary stats for sidebar/dashboard."""
     db = get_db()
-    cursor = db.cursor()
+    cursor = get_cursor(db)
 
     cursor.execute('''
         SELECT
@@ -80,8 +80,8 @@ def watchlist_projects():
         return jsonify([])
 
     db = get_db()
-    cursor = db.cursor()
-    placeholders = ','.join('?' * len(contract_ids))
+    cursor = get_cursor(db)
+    placeholders = ','.join(['%s'] * len(contract_ids))
     cursor.execute(f'''
         SELECT contract_id, title, vendor_name, surtax_category, school_name,
                status, current_amount, total_paid, percent_complete,
@@ -99,7 +99,7 @@ def watchlist_projects():
 def export_contracts():
     """Export contracts to CSV."""
     db = get_db()
-    cursor = db.cursor()
+    cursor = get_cursor(db)
 
     surtax_only = request.args.get('surtax', '0') == '1'
     where = "WHERE is_deleted = 0"
@@ -121,7 +121,7 @@ def export_contracts():
     writer = csv.writer(output)
     writer.writerow(columns)
     for row in rows:
-        writer.writerow(row)
+        writer.writerow([row[col] for col in columns])
 
     return Response(
         output.getvalue(),
@@ -134,7 +134,7 @@ def export_contracts():
 def export_vendors():
     """Export vendor performance to CSV."""
     db = get_db()
-    cursor = db.cursor()
+    cursor = get_cursor(db)
 
     cursor.execute('''
         SELECT v.name, v.headquarters_city, v.headquarters_state, v.vendor_size,
@@ -146,8 +146,8 @@ def export_vendors():
                SUM(CASE WHEN c.is_over_budget = 1 THEN 1 ELSE 0 END) as over_budget_count
         FROM vendors v
         LEFT JOIN contracts c ON v.vendor_id = c.vendor_id AND c.is_deleted = 0
-        GROUP BY v.vendor_id
-        HAVING contract_count > 0
+        GROUP BY v.vendor_id, v.name, v.headquarters_city, v.headquarters_state, v.vendor_size
+        HAVING COUNT(c.contract_id) > 0
         ORDER BY total_value DESC
     ''')
     rows = cursor.fetchall()
@@ -157,7 +157,7 @@ def export_vendors():
     writer = csv.writer(output)
     writer.writerow(columns)
     for row in rows:
-        writer.writerow(row)
+        writer.writerow([row[col] for col in columns])
 
     return Response(
         output.getvalue(),
@@ -170,7 +170,7 @@ def export_vendors():
 def export_change_orders():
     """Export change orders to CSV."""
     db = get_db()
-    cursor = db.cursor()
+    cursor = get_cursor(db)
 
     cursor.execute('''
         SELECT c.title as contract_title, co.description, co.change_value,
@@ -187,7 +187,7 @@ def export_change_orders():
     writer = csv.writer(output)
     writer.writerow(columns)
     for row in rows:
-        writer.writerow(row)
+        writer.writerow([row[col] for col in columns])
 
     return Response(
         output.getvalue(),

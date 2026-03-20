@@ -1,26 +1,30 @@
 """
 Database utilities for the Surtax Oversight Pro application.
+Uses PostgreSQL via psycopg2 with DATABASE_URL.
 """
 
-import sqlite3
+import os
+import psycopg2
+import psycopg2.extras
 from pathlib import Path
 from flask import g, current_app
 from contextlib import contextmanager
 
 
-def get_db_path() -> Path:
-    """Get database path from current app config."""
-    from app.config import get_database_path
-    return get_database_path(current_app.config)
+def get_database_url() -> str:
+    """Get database URL from environment."""
+    url = os.environ.get('DATABASE_URL', '')
+    # Render provides postgres:// but psycopg2 needs postgresql://
+    if url.startswith('postgres://'):
+        url = url.replace('postgres://', 'postgresql://', 1)
+    return url
 
 
 def get_db():
     """Get database connection for the current request."""
     if 'db' not in g:
-        db_path = get_db_path()
-        db_path.parent.mkdir(parents=True, exist_ok=True)
-        g.db = sqlite3.connect(str(db_path))
-        g.db.row_factory = sqlite3.Row
+        g.db = psycopg2.connect(get_database_url())
+        g.db.autocommit = True
     return g.db
 
 
@@ -32,34 +36,38 @@ def close_db(e=None):
 
 
 @contextmanager
-def get_db_connection(db_path: Path = None):
+def get_db_connection(database_url: str = None):
     """Context manager for database connections outside request context."""
-    if db_path is None:
-        from app.config import load_config, get_database_path
-        config = load_config()
-        db_path = get_database_path(config)
+    if database_url is None:
+        database_url = get_database_url()
 
-    conn = sqlite3.connect(str(db_path))
-    conn.row_factory = sqlite3.Row
+    conn = psycopg2.connect(database_url)
+    conn.autocommit = True
     try:
         yield conn
     finally:
         conn.close()
 
 
-def init_db(db_path: Path = None):
+def get_cursor(db):
+    """Get a RealDictCursor from a connection."""
+    return db.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+
+def init_db(database_url: str = None):
     """Initialize database with schema."""
-    if db_path is None:
-        from app.config import load_config, get_database_path
-        config = load_config()
-        db_path = get_database_path(config)
+    if database_url is None:
+        database_url = get_database_url()
 
     schema_path = Path(__file__).parent / 'models' / 'schema.sql'
 
-    with get_db_connection(db_path) as conn:
+    with get_db_connection(database_url) as conn:
+        conn.autocommit = False
+        cursor = conn.cursor()
         with open(schema_path, 'r') as f:
-            conn.executescript(f.read())
+            cursor.execute(f.read())
         conn.commit()
+        conn.autocommit = True
 
 
 def init_app(app):

@@ -1,7 +1,7 @@
 """Financial routes - budget, analytics, benchmarking."""
 
 from flask import Blueprint, render_template, request
-from app.database import get_db
+from app.database import get_db, get_cursor
 from app.services.executive_analytics import ExecutiveAnalytics
 from app.services.benchmarking import get_benchmarking_engine
 from app.services.ai_insights import get_ai_insights
@@ -73,7 +73,7 @@ def home():
 def analytics():
     """Executive analytics with EVM forecasting."""
     db = get_db()
-    cursor = db.cursor()
+    cursor = get_cursor(db)
 
     cursor.execute('''
         SELECT * FROM contracts
@@ -135,7 +135,7 @@ def benchmarking():
 
     # Generate sample KPI values from our data
     db = get_db()
-    cursor = db.cursor()
+    cursor = get_cursor(db)
 
     # Calculate actual KPIs from contract data
     cursor.execute('''
@@ -174,7 +174,7 @@ def benchmarking():
 def change_orders():
     """Change order tracking — contract-level view."""
     db = get_db()
-    cursor = db.cursor()
+    cursor = get_cursor(db)
 
     # Individual change orders (for detail reference)
     cursor.execute('''
@@ -197,7 +197,8 @@ def change_orders():
         FROM contracts c
         JOIN change_orders co ON c.contract_id = co.contract_id
         WHERE c.is_deleted = 0
-        GROUP BY c.contract_id
+        GROUP BY c.contract_id, c.title, c.vendor_name, c.original_amount,
+                 c.current_amount, c.surtax_category, c.status
         ORDER BY ABS(SUM(co.change_value)) DESC
     ''')
     contract_changes = [dict(row) for row in cursor.fetchall()]
@@ -231,7 +232,7 @@ def change_orders():
 def vendors():
     """Vendor performance dashboard with KPIs and tiers."""
     db = get_db()
-    cursor = db.cursor()
+    cursor = get_cursor(db)
 
     cursor.execute('''
         SELECT v.*,
@@ -243,7 +244,13 @@ def vendors():
                SUM(CASE WHEN c.is_over_budget = 1 THEN 1 ELSE 0 END) as over_budget_count
         FROM vendors v
         LEFT JOIN contracts c ON v.vendor_id = c.vendor_id AND c.is_deleted = 0
-        GROUP BY v.vendor_id
+        GROUP BY v.vendor_id, v.name, v.dba_name, v.contact_name, v.email,
+                 v.phone, v.address, v.city, v.state, v.zip_code, v.vendor_type,
+                 v.vendor_size, v.headquarters_city, v.headquarters_state, v.tax_id,
+                 v.registration_date, v.status, v.performance_score, v.total_contracts,
+                 v.total_awarded, v.minority_owned, v.woman_owned, v.small_business,
+                 v.local_business, v.years_in_business, v.bonding_capacity,
+                 v.certifications, v.license_number, v.insurance_expiry, v.notes
         ORDER BY total_value DESC
     ''')
     vendors_list = [dict(row) for row in cursor.fetchall()]

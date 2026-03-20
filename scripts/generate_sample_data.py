@@ -89,10 +89,11 @@ def generate_data():
     init_db()
 
     with get_db_connection() as conn:
+        conn.autocommit = False
         cursor = conn.cursor()
 
         # Check if data already exists
-        cursor.execute("SELECT COUNT(*) FROM contracts")
+        cursor.execute("SELECT COUNT(*) as cnt FROM contracts")
         if cursor.fetchone()[0] > 0:
             print("Data already exists. Skipping generation.")
             return
@@ -104,7 +105,7 @@ def generate_data():
             cursor.execute('''
                 INSERT INTO vendors (vendor_id, name, vendor_size, headquarters_city, headquarters_state,
                                     status, performance_score, years_in_business, bonding_capacity)
-                VALUES (?, ?, ?, ?, ?, 'Active', ?, ?, ?)
+                VALUES (%s, %s, %s, %s, %s, 'Active', %s, %s, %s)
             ''', (vid, name, size, city, state, round(perf_score, 1),
                   random.randint(5, 40), random.choice([5000000, 10000000, 25000000, 50000000])))
 
@@ -212,7 +213,7 @@ def generate_data():
                     is_delayed, delay_days, delay_reason,
                     is_over_budget, budget_variance_pct,
                     is_deleted
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 0)
             ''', (
                 cid, title, f"{category} project at {school}",
                 vendor[0],
@@ -258,7 +259,7 @@ def generate_data():
                     status, percent_complete,
                     overall_health_score, risk_level,
                     is_deleted
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', ?, ?, ?, 0)
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'Active', %s, %s, %s, 0)
             ''', (
                 cid, title, f"General contract for {title.lower()}",
                 vendor[0],

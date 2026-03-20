@@ -11,8 +11,8 @@ server:
   port: 5847
 
 database:
-  type: "sqlite"
-  path: "data/surtax_pro.db"
+  type: "postgresql"
+  url: "${DATABASE_URL}"
 
 features:
   ai_chat: true

@@ -1,7 +1,7 @@
 """General contract management routes."""
 
 from flask import Blueprint, render_template, request, g
-from app.database import get_db
+from app.database import get_db, get_cursor
 
 contracts_bp = Blueprint('contracts', __name__, url_prefix='/contracts')
 
@@ -12,7 +12,7 @@ def dashboard():
     from app.services.stats import get_all_contract_stats
 
     db = get_db()
-    cursor = db.cursor()
+    cursor = get_cursor(db)
     stats = get_all_contract_stats(cursor)
 
     # Spending by type (contracts with vs without surtax category)
@@ -75,7 +75,7 @@ def executive():
     from app.services.stats import get_all_contract_stats
 
     db = get_db()
-    cursor = db.cursor()
+    cursor = get_cursor(db)
     stats = get_all_contract_stats(cursor)
 
     # Vendor performance summary
@@ -102,11 +102,11 @@ def executive():
 
     # Monthly spending trend (approximate from start dates)
     cursor.execute('''
-        SELECT strftime('%Y-%m', start_date) as month,
+        SELECT LEFT(start_date, 7) as month,
                COUNT(*) as contracts_started,
                COALESCE(SUM(current_amount), 0) as value_started
         FROM contracts WHERE is_deleted = 0 AND start_date IS NOT NULL
-        GROUP BY month ORDER BY month DESC LIMIT 12
+        GROUP BY LEFT(start_date, 7) ORDER BY month DESC LIMIT 12
     ''')
     monthly_trend = [dict(row) for row in cursor.fetchall()]
     monthly_trend.reverse()
@@ -123,7 +123,7 @@ def executive():
 def contract_list():
     """List all contracts."""
     db = get_db()
-    cursor = db.cursor()
+    cursor = get_cursor(db)
 
     # Get filter params
     status_filter = request.args.get('status', '')
@@ -142,17 +142,17 @@ def contract_list():
     params = []
 
     if status_filter:
-        query += ' AND status = ?'
+        query += ' AND status = %s'
         params.append(status_filter)
     if type_filter == 'surtax':
         query += ' AND surtax_category IS NOT NULL'
     elif type_filter == 'general':
         query += ' AND surtax_category IS NULL'
     if risk_filter:
-        query += ' AND risk_level = ?'
+        query += ' AND risk_level = %s'
         params.append(risk_filter)
     if search:
-        query += ' AND (title LIKE ? OR vendor_name LIKE ?)'
+        query += ' AND (title ILIKE %s OR vendor_name ILIKE %s)'
         params.extend([f'%{search}%', f'%{search}%'])
 
     sort_map = {
@@ -182,9 +182,9 @@ def contract_list():
 def contract_detail(contract_id):
     """Contract detail view."""
     db = get_db()
-    cursor = db.cursor()
+    cursor = get_cursor(db)
 
-    cursor.execute('SELECT * FROM contracts WHERE contract_id = ? AND is_deleted = 0', (contract_id,))
+    cursor.execute('SELECT * FROM contracts WHERE contract_id = %s AND is_deleted = 0', (contract_id,))
     contract = cursor.fetchone()
 
     if not contract:
@@ -193,24 +193,24 @@ def contract_detail(contract_id):
     contract = dict(contract)
 
     # Change orders
-    cursor.execute('SELECT * FROM change_orders WHERE contract_id = ? ORDER BY requested_date DESC', (contract_id,))
+    cursor.execute('SELECT * FROM change_orders WHERE contract_id = %s ORDER BY requested_date DESC', (contract_id,))
     change_orders = [dict(row) for row in cursor.fetchall()]
 
     # Milestones
-    cursor.execute('SELECT * FROM milestones WHERE contract_id = ? ORDER BY planned_date', (contract_id,))
+    cursor.execute('SELECT * FROM milestones WHERE contract_id = %s ORDER BY planned_date', (contract_id,))
     milestones = [dict(row) for row in cursor.fetchall()]
 
     # Payments
-    cursor.execute('SELECT * FROM payments WHERE contract_id = ? ORDER BY payment_date DESC', (contract_id,))
+    cursor.execute('SELECT * FROM payments WHERE contract_id = %s ORDER BY payment_date DESC', (contract_id,))
     payments = [dict(row) for row in cursor.fetchall()]
 
     # If it's a surtax project, also get phases and inspections
     phases = []
     inspections = []
     if contract.get('surtax_category'):
-        cursor.execute('SELECT * FROM project_phases WHERE contract_id = ? ORDER BY phase_order', (contract_id,))
+        cursor.execute('SELECT * FROM project_phases WHERE contract_id = %s ORDER BY phase_order', (contract_id,))
         phases = [dict(row) for row in cursor.fetchall()]
-        cursor.execute('SELECT * FROM inspection_log WHERE contract_id = ? ORDER BY inspection_date DESC', (contract_id,))
+        cursor.execute('SELECT * FROM inspection_log WHERE contract_id = %s ORDER BY inspection_date DESC', (contract_id,))
         inspections = [dict(row) for row in cursor.fetchall()]
 
     return render_template('contracts/contract_detail.html',
@@ -227,7 +227,7 @@ def contract_detail(contract_id):
 def vendors():
     """Vendor directory."""
     db = get_db()
-    cursor = db.cursor()
+    cursor = get_cursor(db)
 
     cursor.execute('''
         SELECT v.*,
@@ -236,7 +236,13 @@ def vendors():
                AVG(c.overall_health_score) as avg_project_health
         FROM vendors v
         LEFT JOIN contracts c ON v.name = c.vendor_name AND c.is_deleted = 0
-        GROUP BY v.vendor_id
+        GROUP BY v.vendor_id, v.name, v.dba_name, v.contact_name, v.email,
+                 v.phone, v.address, v.city, v.state, v.zip_code, v.vendor_type,
+                 v.vendor_size, v.headquarters_city, v.headquarters_state, v.tax_id,
+                 v.registration_date, v.status, v.performance_score, v.total_contracts,
+                 v.total_awarded, v.minority_owned, v.woman_owned, v.small_business,
+                 v.local_business, v.years_in_business, v.bonding_capacity,
+                 v.certifications, v.license_number, v.insurance_expiry, v.notes
         ORDER BY total_contract_value DESC
     ''')
     vendors_list = [dict(row) for row in cursor.fetchall()]
@@ -250,9 +256,9 @@ def vendors():
 def vendor_detail(vendor_id):
     """Vendor detail view."""
     db = get_db()
-    cursor = db.cursor()
+    cursor = get_cursor(db)
 
-    cursor.execute('SELECT * FROM vendors WHERE vendor_id = ?', (vendor_id,))
+    cursor.execute('SELECT * FROM vendors WHERE vendor_id = %s', (vendor_id,))
     vendor = cursor.fetchone()
 
     if not vendor:
@@ -266,7 +272,7 @@ def vendor_detail(vendor_id):
                status, risk_level, overall_health_score, surtax_category, school_name,
                start_date, current_end_date
         FROM contracts
-        WHERE vendor_name = ? AND is_deleted = 0
+        WHERE vendor_name = %s AND is_deleted = 0
         ORDER BY current_amount DESC
     ''', (vendor['name'],))
     contracts = [dict(row) for row in cursor.fetchall()]
@@ -280,7 +286,7 @@ def vendor_detail(vendor_id):
                AVG(overall_health_score) as avg_health,
                SUM(CASE WHEN is_delayed = 1 THEN 1 ELSE 0 END) as delayed_count,
                SUM(CASE WHEN is_over_budget = 1 THEN 1 ELSE 0 END) as over_budget_count
-        FROM contracts WHERE vendor_name = ? AND is_deleted = 0
+        FROM contracts WHERE vendor_name = %s AND is_deleted = 0
     ''', (vendor['name'],))
     stats = dict(cursor.fetchone())
 

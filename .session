@@ -1,4 +1,4 @@
-codename=diamond-grid
-port=9791
-url=http://127.0.0.1:9791
+codename=cosmic-node
+port=7445
+url=http://127.0.0.1:7445
 county=marion

@@ -17,6 +17,9 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from app import create_app
 
+# Module-level app for gunicorn: gunicorn run:app
+app = create_app()
+
 
 def main():
     parser = argparse.ArgumentParser(description='Run the Surtax Oversight Pro Dashboard')

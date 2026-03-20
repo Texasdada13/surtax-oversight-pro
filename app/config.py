@@ -66,11 +66,11 @@ def load_config(county: str = 'marion') -> Dict[str, Any]:
     return resolved
 
 
-def get_database_path(config: Dict) -> Path:
-    """Get the database path from config."""
-    db_config = config.get('database', {})
-    db_path = db_config.get('path', 'data/surtax_pro.db')
-    if not os.path.isabs(db_path):
-        project_root = Path(__file__).parent.parent
-        return project_root / db_path
-    return Path(db_path)
+def get_database_url(config: Dict) -> str:
+    """Get the database URL from environment or config."""
+    url = os.environ.get('DATABASE_URL', '')
+    if url:
+        if url.startswith('postgres://'):
+            url = url.replace('postgres://', 'postgresql://', 1)
+        return url
+    return config.get('database', {}).get('url', '')

@@ -1,7 +1,7 @@
 """Document management routes."""
 
 from flask import Blueprint, render_template, request
-from app.database import get_db
+from app.database import get_db, get_cursor
 
 documents_bp = Blueprint('documents', __name__, url_prefix='/documents')
 
@@ -10,7 +10,7 @@ documents_bp = Blueprint('documents', __name__, url_prefix='/documents')
 def home():
     """Document library."""
     db = get_db()
-    cursor = db.cursor()
+    cursor = get_cursor(db)
 
     cursor.execute('''
         SELECT d.*, c.title as contract_title
@@ -40,7 +40,7 @@ def home():
 def minutes():
     """Meeting minutes."""
     db = get_db()
-    cursor = db.cursor()
+    cursor = get_cursor(db)
 
     cursor.execute('''
         SELECT * FROM meeting_minutes
@@ -57,7 +57,7 @@ def minutes():
 def report():
     """Annual report with portfolio summary."""
     db = get_db()
-    cursor = db.cursor()
+    cursor = get_cursor(db)
 
     # Portfolio stats
     cursor.execute('''

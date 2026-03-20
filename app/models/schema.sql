@@ -1,4 +1,4 @@
--- Surtax Oversight Pro - Unified Database Schema
+-- Surtax Oversight Pro - Unified Database Schema (PostgreSQL)
 -- Merged from contract-oversight-system, florida-school-surtax-oversight, and surtax-oversight-dashboard
 
 -- Contracts table (superset of all three apps)
@@ -91,8 +91,8 @@ CREATE TABLE IF NOT EXISTS contracts (
 
     -- Audit
     created_by TEXT,
-    created_at TEXT DEFAULT (datetime('now')),
-    updated_at TEXT DEFAULT (datetime('now')),
+    created_at TEXT DEFAULT (NOW()::TEXT),
+    updated_at TEXT DEFAULT (NOW()::TEXT),
     is_deleted INTEGER DEFAULT 0,
     is_emergency INTEGER DEFAULT 0,
     notes TEXT
@@ -198,7 +198,7 @@ CREATE TABLE IF NOT EXISTS concerns (
     category TEXT DEFAULT 'Other',
     severity TEXT DEFAULT 'Medium',
     status TEXT DEFAULT 'Open',
-    created_date TEXT DEFAULT (datetime('now')),
+    created_date TEXT DEFAULT (NOW()::TEXT),
     resolved_date TEXT,
     created_by TEXT,
     resolved_by TEXT,
@@ -207,7 +207,7 @@ CREATE TABLE IF NOT EXISTS concerns (
 
 -- Audit log
 CREATE TABLE IF NOT EXISTS audit_log (
-    log_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    log_id SERIAL PRIMARY KEY,
     table_name TEXT NOT NULL,
     record_id TEXT NOT NULL,
     action TEXT NOT NULL,
@@ -215,7 +215,7 @@ CREATE TABLE IF NOT EXISTS audit_log (
     old_value TEXT,
     new_value TEXT,
     changed_by TEXT,
-    changed_at TEXT DEFAULT (datetime('now')),
+    changed_at TEXT DEFAULT (NOW()::TEXT),
     ip_address TEXT
 );
 
@@ -227,7 +227,7 @@ CREATE TABLE IF NOT EXISTS comments (
     content TEXT NOT NULL,
     is_internal INTEGER DEFAULT 1,
     created_by TEXT,
-    created_at TEXT DEFAULT (datetime('now')),
+    created_at TEXT DEFAULT (NOW()::TEXT),
     FOREIGN KEY (contract_id) REFERENCES contracts(contract_id)
 );
 
@@ -254,7 +254,7 @@ CREATE TABLE IF NOT EXISTS documents (
     mime_type TEXT,
     description TEXT,
     uploaded_by TEXT,
-    uploaded_date TEXT DEFAULT (datetime('now')),
+    uploaded_date TEXT DEFAULT (NOW()::TEXT),
     is_deleted INTEGER DEFAULT 0,
     FOREIGN KEY (contract_id) REFERENCES contracts(contract_id)
 );
@@ -267,7 +267,7 @@ CREATE TABLE IF NOT EXISTS notifications (
     message TEXT,
     type TEXT DEFAULT 'info',
     is_read INTEGER DEFAULT 0,
-    created_at TEXT DEFAULT (datetime('now')),
+    created_at TEXT DEFAULT (NOW()::TEXT),
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
@@ -280,7 +280,7 @@ CREATE TABLE IF NOT EXISTS vendor_ratings (
     category TEXT,
     comments TEXT,
     rated_by TEXT,
-    rated_at TEXT DEFAULT (datetime('now')),
+    rated_at TEXT DEFAULT (NOW()::TEXT),
     FOREIGN KEY (vendor_id) REFERENCES vendors(vendor_id)
 );
 
@@ -297,7 +297,7 @@ CREATE TABLE IF NOT EXISTS meeting_minutes (
     action_items TEXT,
     status TEXT DEFAULT 'Draft',
     document_path TEXT,
-    created_at TEXT DEFAULT (datetime('now'))
+    created_at TEXT DEFAULT (NOW()::TEXT)
 );
 
 -- Counties (for comparison)
@@ -312,7 +312,7 @@ CREATE TABLE IF NOT EXISTS counties (
 
 -- County fiscal data
 CREATE TABLE IF NOT EXISTS county_fiscal_data (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     county_id TEXT,
     fiscal_year TEXT,
     total_revenue REAL,
@@ -325,7 +325,7 @@ CREATE TABLE IF NOT EXISTS county_fiscal_data (
 
 -- Benchmark KPI values (Coupa 2025)
 CREATE TABLE IF NOT EXISTS benchmark_kpi_values (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     category TEXT,
     kpi_name TEXT,
     actual_value REAL,
@@ -337,7 +337,7 @@ CREATE TABLE IF NOT EXISTS benchmark_kpi_values (
 
 -- Project phases (from surtax-dashboard)
 CREATE TABLE IF NOT EXISTS project_phases (
-    phase_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    phase_id SERIAL PRIMARY KEY,
     contract_id TEXT NOT NULL,
     phase_name TEXT NOT NULL,
     phase_order INTEGER DEFAULT 0,
@@ -351,7 +351,7 @@ CREATE TABLE IF NOT EXISTS project_phases (
 
 -- Inspection log
 CREATE TABLE IF NOT EXISTS inspection_log (
-    inspection_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    inspection_id SERIAL PRIMARY KEY,
     contract_id TEXT NOT NULL,
     inspection_date TEXT,
     inspector_name TEXT,
@@ -366,7 +366,7 @@ CREATE TABLE IF NOT EXISTS inspection_log (
 
 -- Community engagement
 CREATE TABLE IF NOT EXISTS community_engagement (
-    engagement_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    engagement_id SERIAL PRIMARY KEY,
     contract_id TEXT NOT NULL,
     meeting_date TEXT,
     attendee_count INTEGER DEFAULT 0,
@@ -378,21 +378,21 @@ CREATE TABLE IF NOT EXISTS community_engagement (
 
 -- Committee actions
 CREATE TABLE IF NOT EXISTS committee_actions (
-    action_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    action_id SERIAL PRIMARY KEY,
     contract_id TEXT,
     action_item TEXT NOT NULL,
     assignee TEXT,
     due_date TEXT,
     status TEXT DEFAULT 'Open',
     priority TEXT DEFAULT 'Medium',
-    created_date TEXT DEFAULT (datetime('now')),
+    created_date TEXT DEFAULT (NOW()::TEXT),
     completed_date TEXT,
     FOREIGN KEY (contract_id) REFERENCES contracts(contract_id)
 );
 
 -- Contractor performance
 CREATE TABLE IF NOT EXISTS contractor_performance (
-    perf_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    perf_id SERIAL PRIMARY KEY,
     contract_id TEXT NOT NULL,
     vendor_name TEXT,
     safety_record TEXT DEFAULT 'Good',

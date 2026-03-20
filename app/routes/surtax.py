@@ -9,14 +9,14 @@ surtax_bp = Blueprint('surtax', __name__, url_prefix='/surtax')
 def overview():
     """Surtax overview dashboard - persona-aware."""
     from app.utils.persona_helpers import get_overview_template_for_persona
-    from app.database import get_db
+    from app.database import get_db, get_cursor
     from app.services.stats import get_overview_stats, get_spending_by_category, get_concerns_list
 
     persona = g.get('persona', 'committee')
     template = get_overview_template_for_persona(persona, 'surtax')
 
     db = get_db()
-    cursor = db.cursor()
+    cursor = get_cursor(db)
     stats = get_overview_stats(cursor)
     categories = get_spending_by_category(cursor)
     concerns = get_concerns_list(cursor)
@@ -54,10 +54,10 @@ def overview():
 @surtax_bp.route('/projects')
 def projects():
     """List all surtax-funded projects with rich filtering."""
-    from app.database import get_db
+    from app.database import get_db, get_cursor
 
     db = get_db()
-    cursor = db.cursor()
+    cursor = get_cursor(db)
 
     # Get filter params
     search_q = request.args.get('q', '').strip()
@@ -80,20 +80,20 @@ def projects():
     params = []
 
     if search_q:
-        query += ' AND (title LIKE ? OR vendor_name LIKE ? OR purpose LIKE ?)'
+        query += ' AND (title ILIKE %s OR vendor_name ILIKE %s OR purpose ILIKE %s)'
         like = f'%{search_q}%'
         params.extend([like, like, like])
     if status_filter:
-        query += ' AND status = ?'
+        query += ' AND status = %s'
         params.append(status_filter)
     if category_filter:
-        query += ' AND surtax_category = ?'
+        query += ' AND surtax_category = %s'
         params.append(category_filter)
     if type_filter:
-        query += ' AND type = ?'
+        query += ' AND type = %s'
         params.append(type_filter)
     if school_filter:
-        query += ' AND school_name = ?'
+        query += ' AND school_name = %s'
         params.append(school_filter)
     if delayed_only:
         query += ' AND is_delayed = 1'
@@ -118,21 +118,21 @@ def projects():
         WHERE is_deleted = 0 AND surtax_category IS NOT NULL
         ORDER BY surtax_category
     ''')
-    categories = [row[0] for row in cursor.fetchall()]
+    categories = [row['surtax_category'] for row in cursor.fetchall()]
 
     cursor.execute('''
         SELECT DISTINCT type FROM contracts
         WHERE is_deleted = 0 AND surtax_category IS NOT NULL AND type IS NOT NULL
         ORDER BY type
     ''')
-    types = [row[0] for row in cursor.fetchall()]
+    types = [row['type'] for row in cursor.fetchall()]
 
     cursor.execute('''
         SELECT DISTINCT school_name FROM contracts
         WHERE is_deleted = 0 AND surtax_category IS NOT NULL AND school_name IS NOT NULL
         ORDER BY school_name
     ''')
-    schools = [row[0] for row in cursor.fetchall()]
+    schools = [row['school_name'] for row in cursor.fetchall()]
 
     # Build active filters list for badge display
     active_filters = []
@@ -169,12 +169,12 @@ def projects():
 @surtax_bp.route('/projects/<contract_id>')
 def project_detail(contract_id):
     """Detailed view of a surtax project."""
-    from app.database import get_db
+    from app.database import get_db, get_cursor
 
     db = get_db()
-    cursor = db.cursor()
+    cursor = get_cursor(db)
 
-    cursor.execute('SELECT * FROM contracts WHERE contract_id = ? AND is_deleted = 0', (contract_id,))
+    cursor.execute('SELECT * FROM contracts WHERE contract_id = %s AND is_deleted = 0', (contract_id,))
     project = cursor.fetchone()
 
     if not project:
@@ -183,32 +183,32 @@ def project_detail(contract_id):
     project = dict(project)
 
     # Get phases
-    cursor.execute('SELECT * FROM project_phases WHERE contract_id = ? ORDER BY phase_order', (contract_id,))
+    cursor.execute('SELECT * FROM project_phases WHERE contract_id = %s ORDER BY phase_order', (contract_id,))
     phases = [dict(row) for row in cursor.fetchall()]
 
     # Get change orders
-    cursor.execute('SELECT * FROM change_orders WHERE contract_id = ? ORDER BY requested_date DESC', (contract_id,))
+    cursor.execute('SELECT * FROM change_orders WHERE contract_id = %s ORDER BY requested_date DESC', (contract_id,))
     change_orders = [dict(row) for row in cursor.fetchall()]
 
     # Get inspections
-    cursor.execute('SELECT * FROM inspection_log WHERE contract_id = ? ORDER BY inspection_date DESC', (contract_id,))
+    cursor.execute('SELECT * FROM inspection_log WHERE contract_id = %s ORDER BY inspection_date DESC', (contract_id,))
     inspections = [dict(row) for row in cursor.fetchall()]
 
     # Get community engagement
-    cursor.execute('SELECT * FROM community_engagement WHERE contract_id = ? ORDER BY meeting_date DESC', (contract_id,))
+    cursor.execute('SELECT * FROM community_engagement WHERE contract_id = %s ORDER BY meeting_date DESC', (contract_id,))
     community = [dict(row) for row in cursor.fetchall()]
 
     # Get committee actions
-    cursor.execute('SELECT * FROM committee_actions WHERE contract_id = ? ORDER BY due_date DESC', (contract_id,))
+    cursor.execute('SELECT * FROM committee_actions WHERE contract_id = %s ORDER BY due_date DESC', (contract_id,))
     actions = [dict(row) for row in cursor.fetchall()]
 
     # Get contractor performance
-    cursor.execute('SELECT * FROM contractor_performance WHERE contract_id = ?', (contract_id,))
+    cursor.execute('SELECT * FROM contractor_performance WHERE contract_id = %s', (contract_id,))
     perf_row = cursor.fetchone()
     contractor_perf = dict(perf_row) if perf_row else None
 
     # Get documents
-    cursor.execute('SELECT * FROM documents WHERE contract_id = ? AND is_deleted = 0 ORDER BY uploaded_date DESC', (contract_id,))
+    cursor.execute('SELECT * FROM documents WHERE contract_id = %s AND is_deleted = 0 ORDER BY uploaded_date DESC', (contract_id,))
     documents = [dict(row) for row in cursor.fetchall()]
 
     return render_template('surtax/project_detail_enhanced.html',
@@ -226,11 +226,11 @@ def project_detail(contract_id):
 @surtax_bp.route('/schools')
 def schools():
     """List schools with surtax project summaries."""
-    from app.database import get_db
+    from app.database import get_db, get_cursor
     from app.services.stats import get_projects_by_school
 
     db = get_db()
-    cursor = db.cursor()
+    cursor = get_cursor(db)
     schools_list = get_projects_by_school(cursor)
 
     return render_template('surtax/schools.html',
@@ -241,10 +241,10 @@ def schools():
 @surtax_bp.route('/schools/<path:school_name>')
 def school_detail(school_name):
     """Detail view for a specific school's projects."""
-    from app.database import get_db
+    from app.database import get_db, get_cursor
 
     db = get_db()
-    cursor = db.cursor()
+    cursor = get_cursor(db)
 
     cursor.execute('''
         SELECT contract_id, title, surtax_category, vendor_name,
@@ -252,7 +252,7 @@ def school_detail(school_name):
                is_delayed, delay_days, is_over_budget, budget_variance_pct,
                overall_health_score, risk_level
         FROM contracts
-        WHERE is_deleted = 0 AND school_name = ?
+        WHERE is_deleted = 0 AND school_name = %s
         ORDER BY current_amount DESC
     ''', (school_name,))
     projects_list = [dict(row) for row in cursor.fetchall()]
@@ -261,7 +261,7 @@ def school_detail(school_name):
     cursor.execute('''
         SELECT COUNT(*) as total, COALESCE(SUM(current_amount), 0) as budget,
                COALESCE(SUM(total_paid), 0) as spent, AVG(percent_complete) as avg_completion
-        FROM contracts WHERE is_deleted = 0 AND school_name = ?
+        FROM contracts WHERE is_deleted = 0 AND school_name = %s
     ''', (school_name,))
     stats = dict(cursor.fetchone())
 
@@ -275,10 +275,10 @@ def school_detail(school_name):
 @surtax_bp.route('/capital-projects')
 def capital_projects():
     """Capital projects overview grouped by category."""
-    from app.database import get_db
+    from app.database import get_db, get_cursor
 
     db = get_db()
-    cursor = db.cursor()
+    cursor = get_cursor(db)
 
     # Overall capital stats
     cursor.execute('''
@@ -334,11 +334,11 @@ def capital_projects():
 @surtax_bp.route('/concerns')
 def concerns():
     """Concerns dashboard - delayed and over-budget projects."""
-    from app.database import get_db
+    from app.database import get_db, get_cursor
     from app.services.stats import get_concerns_list
 
     db = get_db()
-    cursor = db.cursor()
+    cursor = get_cursor(db)
     concerns_list = get_concerns_list(cursor)
 
     # Split by type

@@ -203,9 +203,9 @@ def _register_persona_hooks(app):
         # Get concerns count for badge
         concerns_count = 0
         try:
-            from app.database import get_db
+            from app.database import get_db, get_cursor
             db = get_db()
-            cursor = db.cursor()
+            cursor = get_cursor(db)
             cursor.execute('''
                 SELECT COUNT(*) FROM contracts
                 WHERE is_deleted = 0
