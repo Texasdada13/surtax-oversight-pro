@@ -1,4 +1,4 @@
-codename=cosmic-node
-port=7445
-url=http://127.0.0.1:7445
+codename=nitro-ledger
+port=7215
+url=http://127.0.0.1:7215
 county=marion
